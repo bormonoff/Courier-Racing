@@ -19,6 +19,9 @@ add_executable(courier_race
   src/http_server.cpp 
   src/http_server.h 
   src/sdk.h
+  src/tagged.h
+  src/model.h
+  src/model.cpp
 )
 
 target_link_libraries(courier_race PRIVATE Threads::Threads)
