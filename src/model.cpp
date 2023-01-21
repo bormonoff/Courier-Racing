@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 namespace model {
+
 using namespace std::literals;
 
 void Map::AddOffice(Office office) {
@@ -16,7 +17,7 @@ void Map::AddOffice(Office office) {
         warehouse_id_to_index_.emplace(o.GetId(), index);
     } catch (...) {
         offices_.pop_back();
-        throw;
+        throw std::invalid_argument("Can't emplace office!");
     }
 }
 
@@ -29,9 +30,10 @@ void Game::AddMap(Map map) {
             maps_.emplace_back(std::move(map));
         } catch (...) {
             map_id_to_index_.erase(it);
-            throw;
+            throw std::invalid_argument("Can't emplace map!");
         }
     }
 }
+
 
 }  // namespace model

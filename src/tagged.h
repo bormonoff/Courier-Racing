@@ -30,6 +30,7 @@ private:
     Value value_;
 };
 
+
 template <typename TaggedValue>
 struct TaggedHasher {
     size_t operator()(const TaggedValue& value) const {
