@@ -8,10 +8,6 @@
 #include "request_handler.h"
 #include "http_server.h"
 
-using namespace std::literals;
-namespace net = boost::asio;
-namespace sys = boost::system;
-
 namespace {
 
 template <typename Fn>
@@ -28,19 +24,20 @@ void RunWorkers(unsigned max_threads, const Fn& fn) {
 
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
+using namespace std::literals;
 namespace beast = boost::beast;
 namespace sys = boost::system;
 namespace http = beast::http;
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
+    if (argc != 3) {
         std::cerr << "Usage: game_server <game-config-json>" << std::endl;
         return EXIT_FAILURE;
     }
     try{
         model::Game game = json_loader::LoadGame(argv[1]);
 
-        http_handler::RequestHandler handler{game};
+        http_handler::RequestHandler handler{game, argv[2]};
 
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
