@@ -3,7 +3,8 @@
 namespace http_server {
 
 void ReportError(boost::system::error_code& error, std::string_view what){
-    std::cerr<< what <<": "<<error.what()<<std::endl;
+    BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("error",
+                                boost_log::ExceptionReciever(EXIT_FAILURE, what, error.what()));
 }
 
 //class SessionBase:
@@ -16,7 +17,7 @@ void SessionBase::Run(){
 void SessionBase::Read(){
         using namespace std::literals;
         request_ = {};
-        stream_.expires_after(100s);
+        stream_.expires_after(30s);
         http::async_read(stream_, buffer_, request_, 
                          beast::bind_front_handler(&SessionBase::OnRead, GetSharedThis()));
 }
@@ -26,14 +27,14 @@ void SessionBase::OnRead(beast::error_code error, std::size_t bytes_read){
             return Close();
         }
         if(error){
-            ReportError(error, "read");
+            return ReportError(error, "read");
         }
         HandleRequest(std::move(request_));
 }
 
 void SessionBase::OnWrite(bool close, beast::error_code error, std::size_t bytes_written){
         if(error){
-            ReportError(error, "write");
+            return ReportError(error, "write");
         }
 
         if(close){
@@ -47,5 +48,8 @@ void SessionBase::Close(){
         stream_.socket().shutdown(tcp::socket::shutdown_send, error);
 }
 
+tcp::endpoint SessionBase::GetEndpoint(){
+    return stream_.socket().local_endpoint();
+}
 
 }  // namespace http_server

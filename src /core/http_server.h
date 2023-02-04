@@ -1,11 +1,12 @@
 #pragma once
-#include "sdk.h"
+#include "../sdk.h"
 //
 #include <iostream>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include "../loggers/boost_log.h"
 
 namespace http_server {
 
@@ -46,6 +47,8 @@ protected:
             });
     }
 
+    tcp::endpoint GetEndpoint();
+
 private:                                                     
     void Read();
 
@@ -71,7 +74,8 @@ public:
 
 private:
     void HandleRequest(HttpRequest&& request) override{
-        request_handler_(std::move(request), [self = this->shared_from_this()](auto&& response) {
+        tcp::endpoint ep = GetEndpoint();
+        request_handler_(ep, std::move(request), [self = this->shared_from_this()](auto&& response) {
             self->Write(std::move(response));
         });
     }

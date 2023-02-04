@@ -4,9 +4,12 @@
 #include <boost/asio/signal_set.hpp>
 #include <thread>
 
-#include "json_loader.h"
-#include "request_handler.h"
-#include "http_server.h"
+#include "json/json_loader.h"
+#include "handlers/request_handler.h"
+#include "core/http_server.h"
+#include "loggers/boost_log.h"
+#include <exception>
+#include "session/player_token.h"
 
 namespace {
 
@@ -35,9 +38,12 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     try{
+        boost_log::InitBoostLog();
+
         model::Game game = json_loader::LoadGame(argv[1]);
 
         http_handler::RequestHandler handler{game, argv[2]};
+        http_handler::RequestLoggerHandler logger_handler{handler};
 
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
@@ -45,26 +51,29 @@ int main(int argc, char* argv[]) {
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const boost::system::error_code& error, int signal_number){
             if(!error){
-                std::cout << "Signal " << signal_number << " received" << std::endl;
+                BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("server exited", boost_log::FinishServer(EXIT_SUCCESS));
                 ioc.stop();
             }
         });
 
-        const auto address = net::ip::make_address("0.0.0.0");
+        const std::string address = "0.0.0.0";
         constexpr unsigned short port = 8080;
-        
-        http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
-            handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        const tcp::endpoint endpoint{net::ip::make_address(address), port};
+
+        http_server::ServeHttp(ioc, endpoint, [&logger_handler](tcp::endpoint& endpoint, auto&& req, auto&& send) {
+            logger_handler(endpoint, std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
 
-        std::cout << "Server has started..."sv << std::endl;
+        BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("server started", boost_log::StartServer(port, address));
 
         RunWorkers(num_threads, [&ioc]{
             ioc.run();
         });    
+
     }
     catch (const std::exception& ex) {
-        std::cerr << ex.what() << std::endl;
+        std::cout<<"ojdoijd"<<std::endl;
+        BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("server exited", boost_log::ExceptionReciever(EXIT_FAILURE,"shutdown", ex.what()));
         return EXIT_FAILURE;
     }
 }
