@@ -28,6 +28,8 @@ add_executable(game_server
 	src/handlers/api_handler.h
 	src/handlers/api_handler.cpp
 	src/handlers/logging_request_handler.h
+	src/handlers/application.h
+	src/handlers/application.cpp
 	src/session/dog.h
 	src/session/dog.cpp
 	src/session/game_session.h
@@ -48,7 +50,6 @@ add_executable(game_server
 
 target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost)
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
-
 
 set(CMAKE_BUILD_TYPE Debug)
 

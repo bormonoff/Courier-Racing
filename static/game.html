@@ -2,7 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Game</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <title>Dog Story</title>
     <style>
       body { margin: 0; }
     </style>
@@ -11,66 +17,21 @@
     <script src="js/loaders/OBJLoader.js"></script>
     <script src="js/loaders/MTLLoader.js"></script>
     <script src="js/loaders/GLTFLoader.js"></script>
-    <script src="js/libs/fflate.min.js"></script>
     <script src="js/loaders/FBXLoader.js"></script>
+    <script src="js/libs/fflate.min.js"></script>
+    <script src="js/utils/SkeletonUtils.js"></script>
 
     <script src="js/game.js"></script>
     <script src="js/helper.js"></script>
     <script src="js/game_map.js"></script>
+    <script src="js/js.cookie.min.js"></script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-    <script>
-      const map={
-              "id": "map1",
-              "name": "Map 1",
-              "roads": [
-                {
-                  "x0": 0,
-                  "y0": 0,
-                  "x1": 40
-                },
-                {
-                  "x0": 40,
-                  "y0": 0,
-                  "y1": 30
-                },
-                {
-                  "x0": 40,
-                  "y0": 30,
-                  "x1": 0
-                },
-                {
-                  "x0": 0,
-                  "y0": 0,
-                  "y1": 30
-                }
-              ],
-              "buildings": [
-                {
-                  "x": 5,
-                  "y": 5,
-                  "w": 30,
-                  "h": 20
-                }
-              ],
-              "offices": [
-                {
-                  "id": "wh0",
-                  "x": 40,
-                  "y": 30,
-                  "offsetX": 5,
-                  "offsetY": 0
-                }
-              ]
-            };
-
-    </script>
     
   </head>
   <body>
     <div id="container">
-      Choose map:
     </div>
   </body>
   <script>
@@ -82,28 +43,12 @@
 
     function loadMap(cmap) {
       $('#container').hide();
-      $.getJSON('/api/v1/maps/' + cmap['id'], function(data){
+      $.getJSON('/api/v1/maps/' + cmap, function(data){
         gameLoadMap(data);
         gameserverMain();
       });
     }
 
-    loadMapList(maps => {
-      const ul = $('<ul>');
-      ul.addClass('map-list');
-      for(imap of maps) {
-        const cmap = imap;
-        const li = $('<li>');
-        const a = $('<a>');
-        a.text(cmap['name'])
-        a.attr('href', '#')
-        a.click(function(){
-          loadMap(cmap);
-        });
-        li.append(a);
-        ul.append(li);
-      }
-      $('#container').append(ul);
-    });
+    loadMap(Cookies.get('mapId'));
   </script>
 </html>

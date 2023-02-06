@@ -21,6 +21,22 @@ public:
         return dog_.GetName();
     }
 
+    const uint16_t& GetDogID() const{
+        return dog_.GetID();
+    }
+
+    const Coordinate& GetDogStart() const{
+        return dog_.GetStartPoint();
+    }
+
+    const Speed& GetDogSpeed() const{
+        return dog_.GetSpeed();
+    }
+
+    const std::string GetDogDirection() const{
+        return dog_.GetDirection();
+    }
+
 private:
     const Dog& dog_;
     const std::string token_;

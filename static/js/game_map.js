@@ -1,7 +1,9 @@
 let map_tiles;
 let xmin, xmax, ymin, ymax;
+let map;
 
-function gameLoadMap(map) {
+function gameLoadMap(map_local) {
+  map = map_local;
   const road_xmin = map['roads'].map(r=>'x1' in r ? Math.min(r['x0'], r['x1']) : r['x0']);
   const road_xmax = map['roads'].map(r=>'x1' in r ? Math.max(r['x0'], r['x1']) : r['x0']);
   const road_ymin = map['roads'].map(r=>'y1' in r ? Math.min(r['y0'], r['y1']) : r['y0']);
@@ -21,8 +23,10 @@ function gameLoadMap(map) {
 
   for(const r of map['roads']) {
     const rh = 'x1' in r;
-    const s = rh ? r['x0'] : r['y0'];
-    const e = rh ? r['x1'] : r['y1'];
+    const ss = rh ? r['x0'] : r['y0'];
+    const ee = rh ? r['x1'] : r['y1'];
+    const s = Math.min(ss,ee);
+    const e = Math.max(ss,ee);
     for(z=s;z<=e;++z) {
       const x = (rh ? z : r['x0']) - xmin;
       const y = (rh ? r['y0'] : z) - ymin;
