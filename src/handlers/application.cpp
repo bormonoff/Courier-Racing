@@ -2,9 +2,66 @@
 
 namespace http_handler{
 
+
+http::response<http::string_body> Application::ChangeSpeed(const http::request<http::string_body>& req){
+    if(req.method_string() != "POST"){
+        return MethodNotAllowed(req);
+    }
+
+    std::string token;
+    try{
+        token = static_cast<std::string>(req[http::field::authorization].substr(7));
+        if(token.size() != 32){
+            throw "Wrong token";
+        }
+    }catch(...){
+        return CantAuthorize(req);
+    }
+
+    std::optional<game_session::Player> player = FindPlayerViaToken(token);
+    if(player != std::nullopt){
+        return ChangeDirectory(req, *player);
+    }
+
+    return CantFindPlayer(req);
+}
+
+http::response<http::string_body> Application::ChangeDirectory(const http::request<http::string_body>& req, game_session::Player& player){
+    http::response<http::string_body> response{http::status::ok, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+
+    boost::system::error_code error;
+    json::value parse_req = json::parse(req.body(), error);
+    if(error){
+        return ParseError(req); 
+    }
+
+    std::string move_field;
+    try{
+        move_field =  static_cast<std::string>(parse_req.at("move").as_string());
+    }catch(...){    
+        return ParseError(req);
+    }
+
+    if(req[http::field::content_type] != ContentType::TYPE_JSON){
+        return NotAllowed(req);
+    }
+
+    try{
+        player.SetDogSpeed(move_field);
+    }catch(...){
+        return ParseError(req);
+    }
+    
+    response.body() = "{}";
+    response.content_length(response.body().size());
+    return response;
+}
+
 http::response<http::string_body> Application::GetState(const http::request<http::string_body>& req){
     if(req.method_string() != "GET"){
-        return MethodNotAllowed(req);
+        return MethodGETAllowed(req);
     }
 
     std::string token;
@@ -64,14 +121,16 @@ http::response<http::string_body> Application::JoinGame(const http::request<http
         return NotAllowed(req);
     }
 
-    boost::system::error_code error;
-    json::value parse_req = json::parse(req.body(), error);
-    if(error){
+    std::string dog_name;
+    std::string map;
+    try{
+        json::value parse_req = json::parse(req.body());
+        dog_name = static_cast<std::string>(parse_req.at("userName").as_string());
+        map = static_cast<std::string>(parse_req.at("mapId").as_string());
+    }catch(...){
         return ParseError(req); 
     }
-
-    const std::string dog_name = static_cast<std::string>(parse_req.at("userName").as_string());
-    const std::string map = static_cast<std::string>(parse_req.at("mapId").as_string());
+    
     if(dog_name == ""){
         return InvalidPlayerName(req);
     }
@@ -95,7 +154,7 @@ http::response<http::string_body> NotAllowed(const http::request<http::string_bo
     response.set(http::field::allow, "POST");
 
     json::object json_res;
-    json_res["code"] = "invalidArgument";
+    json_res["code"] = "invalidMethod";
     json_res["message"] = "Only POST method is expected :(";
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
@@ -148,12 +207,24 @@ std::optional<game_session::GameSession> Application::FindSessionViaToken(std::s
 }
 
 http::response<http::string_body> MethodNotAllowed(const http::request<http::string_body>& req){
-    http::response<http::string_body> response{http::status::method_not_allowed, req.version()};
+    http::response<http::string_body> response{http::status::bad_request, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+    response.set(http::field::allow, "GET, HEAD");
+
+    json::object json_res;
+    json_res["code"] = "invalidMethod";
+    json_res["message"] = "Invalid Method";
+    response.body() = json::serialize(json_res);
+    response.content_length(response.body().size());
+    return response;
+}
+
+http::response<http::string_body> MethodGETAllowed(const http::request<http::string_body>& req){
+    http::response<http::string_body> response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     response.set(http::field::allow, "GET");
-    response.set(http::field::allow, "HEAD");
-
 
     json::object json_res;
     json_res["code"] = "invalidMethod";
@@ -169,7 +240,7 @@ http::response<http::string_body> CantAuthorize(const http::request<http::string
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     
     json::object json_res;
-    json_res["code"] = "InvalidToken";
+    json_res["code"] = "invalidToken";
     json_res["message"] = "Authorization header is miising or token is invalid";
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
@@ -236,7 +307,7 @@ http::response<http::string_body> NotFound(const http::request<http::string_body
 }
 
 http::response<http::string_body> InvalidPlayerName(const http::request<http::string_body>& req){
-    http::response<http::string_body> response{http::status::not_found, req.version()};
+    http::response<http::string_body> response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
@@ -249,7 +320,7 @@ http::response<http::string_body> InvalidPlayerName(const http::request<http::st
 }
 
 http::response<http::string_body> ParseError(const http::request<http::string_body>& req){
-    http::response<http::string_body> response{http::status::not_found, req.version()};
+    http::response<http::string_body> response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 

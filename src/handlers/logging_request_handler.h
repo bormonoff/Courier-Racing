@@ -43,7 +43,7 @@ private:
 
     template <typename Body, typename Fields>
     void LogResponse(http::response<Body, Fields>& res, net::ip::tcp::endpoint ep, uint64_t time){
-        BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("response send", boost_log::Response<Body, Fields>(res, ep, time));
+        BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("response sent", boost_log::Response<Body, Fields>(res, ep, time));
     }
 
     RequestHandler request_handler_;

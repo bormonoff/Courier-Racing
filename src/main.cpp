@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
             logger_handler(endpoint, std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
 
-        BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("server started", boost_log::StartServer(port, address));
+        BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("Server has started...", boost_log::StartServer(port, address));
 
         RunWorkers(num_threads, [&ioc]{
             ioc.run();
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 
     }
     catch (const std::exception& ex) {
-        std::cout<<"ojdoijd"<<std::endl;
+        std::cout<<"ojdoijd"<<std::endl ;
         BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("server exited", boost_log::ExceptionReciever(EXIT_FAILURE,"shutdown", ex.what()));
         return EXIT_FAILURE;
     }

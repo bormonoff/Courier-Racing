@@ -119,9 +119,10 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name) noexcept
+    Map(Id id, std::string name, int64_t speed) noexcept
         : id_(std::move(id))
-        , name_(std::move(name)) {
+        , name_(std::move(name))
+        , dog_speed_(speed) {
     }
 
     const Id& GetId() const noexcept {
@@ -144,6 +145,10 @@ public:
         return offices_;
     }
 
+    double GetDogSpeed() const noexcept {
+        return dog_speed_;
+    }
+
     void AddRoad(const Road& road) {
         roads_.emplace_back(road);
     }
@@ -161,6 +166,7 @@ private:
     std::string name_;
     Roads roads_;
     Buildings buildings_;
+    double dog_speed_;
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;

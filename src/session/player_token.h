@@ -13,7 +13,7 @@ std::string GenerateToken();
 
 class PlayerTokens{
 public:
-    const Player& AddPlayer(const Dog& dog){
+    const Player& AddPlayer(Dog& dog){
         const std::string token = GenerateToken();
         players_.emplace(token, Player{token,dog}); 
         return players_.find(token)->second;

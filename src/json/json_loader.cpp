@@ -36,14 +36,23 @@ void CreateGame(boost::json::value& file_json, model::Game& game){
         
         std::string ID = static_cast<std::string>(maps.at("id").as_string());
         std::string name = static_cast<std::string>(maps.at("name").as_string());
+        double speed = GetDogSpeed(file_json, maps);
 
-        model::Map map_for_add(util::Tagged<std::string, model::Map>(ID), name);
+        model::Map map_for_add(util::Tagged<std::string, model::Map>(ID), name, speed);
 
         ReadRoadsIntoMap(maps, map_for_add);    
         ReadOfficesIntoMap(maps, map_for_add);
         ReadBuildingsIntoMap(maps, map_for_add);
         game.AddMap(map_for_add);
     }
+}
+
+double GetDogSpeed(boost::json::value& file_json, const json::value& maps){
+    double speed = file_json.at("defaultDogSpeed").as_double();
+    try{
+        speed = maps.at("dogSpeed").as_double();
+    }catch(...){}
+    return speed;
 }
 
 void ReadRoadsIntoMap(const json::value& maps, model::Map& map_for_add){

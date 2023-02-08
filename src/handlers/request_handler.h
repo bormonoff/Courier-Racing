@@ -7,13 +7,16 @@
 #include <optional>
 #include <cctype>
 #include "sstream"
+#include <mutex>
 
 namespace http_handler {
 
 std::vector<std::string> ReadURL(const http::request<http::string_body>& req);
 http::response<http::string_body> FileNotFound(const http::request<http::string_body>& req);
 
-class RequestHandler {
+static std::mutex mutex_;
+
+class RequestHandler{
 public:
     explicit RequestHandler(model::Game& game, const std::filesystem::path& path_to_content)
         : api_handler_{game}
@@ -28,7 +31,9 @@ public:
         std::vector<std::string> parseURL{std::move(ReadURL(req))};
 
         if(parseURL[0] == "api"){
+            mutex_.lock();
             send(std::move(api_handler_.MakeResponse(req, parseURL)));
+            mutex_.unlock();
         }else{
             std::optional<http::response<http::file_body>> response = MakeFileResponse(req, parseURL);
             if(response){

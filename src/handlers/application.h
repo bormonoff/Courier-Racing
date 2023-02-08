@@ -32,6 +32,8 @@ public:
     http::response<http::string_body> JoinGame(const http::request<http::string_body>& req);
     http::response<http::string_body> Authorization(const http::request<http::string_body>& req, const game_session::Player& player);
     http::response<http::string_body> ReturnMapsArray(const http::request<http::string_body>& req);
+    http::response<http::string_body> ChangeSpeed(const http::request<http::string_body>& req);
+    http::response<http::string_body> ChangeDirectory(const http::request<http::string_body>& req, game_session::Player& player);
 
 private:
     model::Game& game_;
@@ -49,6 +51,7 @@ http::response<http::string_body> ParseError(const http::request<http::string_bo
 http::response<http::string_body> CantAuthorize(const http::request<http::string_body> &req);
 http::response<http::string_body> ReturnMap(const model::Map* const this_map, const http::request<http::string_body>& req);
 http::response<http::string_body> BadRequest(const http::request<http::string_body>& req);
+http::response<http::string_body> MethodGETAllowed(const http::request<http::string_body>& req);
 json::array ReturnRoads(const model::Map* const this_map);
 json::array ReturnBuildings(const model::Map* const this_map);
 json::array ReturnOffices(const model::Map* const this_map);

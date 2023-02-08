@@ -28,6 +28,9 @@ http::response<http::string_body> ApiHandler::MakeResponse (const http::request<
                     return NotFound(req);
                 }
             }
+            if(parseURL.size() == 5 && parseURL[2] == "game" && parseURL[3] == "player" && parseURL[4] == "action"){
+                return scenarios_.ChangeSpeed(req);
+            }
         }
     }
 
