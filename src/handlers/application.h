@@ -27,6 +27,7 @@ public:
     const model::Game& GetGame() const;
     http::response<http::string_body> GetPlayers(const http::request<http::string_body>& req);
     http::response<http::string_body> GetState(const http::request<http::string_body>& req);
+    http::response<http::string_body> MoveDogs(const http::request<http::string_body>& req);
     std::optional<game_session::Player> FindPlayerViaToken(std::string& token);
     std::optional<game_session::GameSession> FindSessionViaToken(std::string& token);
     http::response<http::string_body> JoinGame(const http::request<http::string_body>& req);
@@ -34,12 +35,13 @@ public:
     http::response<http::string_body> ReturnMapsArray(const http::request<http::string_body>& req);
     http::response<http::string_body> ChangeSpeed(const http::request<http::string_body>& req);
     http::response<http::string_body> ChangeDirectory(const http::request<http::string_body>& req, game_session::Player& player);
-
+   
 private:
     model::Game& game_;
     std::map<std::string, game_session::GameSession> sessions_;
 };
 
+http::response<http::string_body> OkResponse(const http::request<http::string_body>& req);
 http::response<http::string_body> FindAllPlayerStatesOnMap(const http::request<http::string_body> &req, const game_session::GameSession& session);
 http::response<http::string_body> FindAllPlayersOnMap(const http::request<http::string_body> &req, const game_session::GameSession& session);
 http::response<http::string_body> MethodNotAllowed(const http::request<http::string_body>& req);

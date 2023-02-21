@@ -2,6 +2,38 @@
 
 namespace http_handler{
 
+http::response<http::string_body> Application::MoveDogs(const http::request<http::string_body>& req){
+    if(req.method_string() != "POST"){
+        return NotAllowed(req);
+    }
+
+    size_t tick;
+    try{
+        json::value parse_req = json::parse(req.body());
+        // tick = std::stoi(json::serialize(parse_req.at("timeDelta")));
+        if(!parse_req.as_object().at("timeDelta").is_int64()){
+            throw "lll";
+        }
+        tick = json::value_to<size_t>(parse_req.as_object().at("timeDelta"));
+    }catch(...){
+        return ParseError(req); 
+    }
+    for(auto& it : sessions_){
+        it.second.MakeOffset(tick);
+    }
+    
+    return OkResponse(req);
+}
+
+http::response<http::string_body> OkResponse(const http::request<http::string_body>& req){
+    http::response<http::string_body> response{http::status::ok, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+
+    response.body() = "{}";
+    response.content_length(response.body().size());
+    return response;
+}
 
 http::response<http::string_body> Application::ChangeSpeed(const http::request<http::string_body>& req){
     if(req.method_string() != "POST"){
@@ -49,7 +81,7 @@ http::response<http::string_body> Application::ChangeDirectory(const http::reque
     }
 
     try{
-        player.SetDogSpeed(move_field);
+        player.SetDogSpeed(std::move(move_field));
     }catch(...){
         return ParseError(req);
     }
@@ -89,7 +121,6 @@ http::response<http::string_body> FindAllPlayerStatesOnMap(const http::request<h
     
     json::object json_res;
     json::object ID;
-    size_t count = 0;
     for(auto it : session.GetPlayerTokens().GetPlayers()){
         json::object data;
 
@@ -105,8 +136,7 @@ http::response<http::string_body> FindAllPlayerStatesOnMap(const http::request<h
 
         data["dir"] = it.second.GetDogDirection();
 
-        ID[std::to_string(count)] = data;
-        ++count;
+        ID[std::to_string(it.second.GetDogID())] = data;
     }
     json_res["players"] = ID;
     std::string response2 = json::serialize(json_res);
@@ -336,6 +366,8 @@ http::response<http::string_body> BadRequest(const http::request<http::string_bo
     http::response<http::string_body> response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.body() = "{\"code\": \"badRequest\",\"message\": \"Bad request\"}";
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+    response.content_length(response.body().size());
     return response;
 }
 
@@ -353,6 +385,8 @@ http::response<http::string_body> Application::ReturnMapsArray(const http::reque
         maps.push_back(map_it);
     };
     response.body() = json::serialize(maps);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+    response.content_length(response.body().size());
     return response;
 }
 
@@ -368,6 +402,8 @@ http::response<http::string_body> ReturnMap(const model::Map* const this_map, co
     http::response<http::string_body> response{http::status::ok, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.body() = json::serialize(map);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+    response.content_length(response.body().size());
     return response;
 }
 

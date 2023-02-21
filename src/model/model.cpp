@@ -35,5 +35,17 @@ void Game::AddMap(Map map) {
     }
 }
 
+// bool operator<(const Road& a, const Road& b){
+//     return a.GetStart().x < b.GetStart().x &&
+//            a.GetStart().y < b.GetStart().y;
+// }
 
-}  // namespace model
+// bool XSort(const Road& a, const Road& b){
+//     return a.GetStart().x <= b.GetStart().x && ;
+// }
+
+bool operator ==(const Point& a, const Point& b){
+    return a.x == b.x && a.y == b.y;
+}
+
+}  // namespace

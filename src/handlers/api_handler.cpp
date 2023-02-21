@@ -20,6 +20,9 @@ http::response<http::string_body> ApiHandler::MakeResponse (const http::request<
             if(parseURL.size() == 4 && parseURL[2] == "game" && parseURL[3] == "state"){
                 return scenarios_.GetState(req);
             }
+            if(parseURL.size() == 4 && parseURL[2] == "game" && parseURL[3] == "tick"){
+                return scenarios_.MoveDogs(req);
+            }
             if(parseURL.size() == 4 && parseURL[2] == "maps"){
                 const auto this_map = scenarios_.GetGame().FindMap(util::Tagged<std::string, model::Map>(parseURL[3]));
                 if(this_map != nullptr){

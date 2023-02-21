@@ -37,8 +37,8 @@ public:
         return dog_.GetDirection();
     }
 
-    void SetDogSpeed(std::string& direction){
-        dog_.SetSpeed(direction);
+    void SetDogSpeed(std::string&& direction){
+        dog_.SetSpeed(std::move(direction));
     }
 
 

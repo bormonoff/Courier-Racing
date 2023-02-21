@@ -18,7 +18,7 @@ const std::string Dog::GetDirection() const{
     throw "can't make response dog::GetDirection()";
 }
 
-void Dog::SetSpeed(std::string& direction){
+void Dog::SetSpeed(std::string&& direction){
     if(direction.empty()){
         speed_.dx = 0;
         speed_.dy = 0;
@@ -49,4 +49,7 @@ void Dog::SetSpeed(std::string& direction){
     }
     throw "Invalid move field";
 }
+
+
+
 } // namespace

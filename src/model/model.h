@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 #include "../util/tagged.h"
 
@@ -13,6 +14,8 @@ using Coord = Dimension;
 struct Point {
     Coord x, y;
 };
+
+bool operator ==(const Point& a, const Point& b);
 
 struct Size {
     Dimension width, height;
@@ -50,6 +53,8 @@ public:
         , end_{start.x, end_y} {
     }
 
+    Road() = default;
+    
     bool IsHorizontal() const noexcept {
         return start_.y == end_.y;
     }
@@ -65,10 +70,22 @@ public:
     Point GetEnd() const noexcept {
         return end_;
     }
+
+    void SetStart(Point point){ 
+        start_ = point;
+    }
+
+    void SetEnd(Point point) {
+        end_ = point;
+    }
+
 private:
     Point start_;
     Point end_;
 };
+
+// bool XSort(const Road& a, const Road& b);
+// bool YSort(const Road& a, const Road& b);
 
 class Building {
 public:
@@ -112,6 +129,82 @@ private:
     Offset offset_;
 };
 
+class RoadMap{
+public:
+    using DogRoads = std::vector<Road>;
+
+    // void AddRoad(Road road){
+    //     if(road.IsHorizontal()){
+    //         Road temp = InvertRoad(road);
+    //         InsertHorizontalRoad(temp); 
+    //     }
+    //     if(road.IsVertical()){
+    //         Road temp = InvertRoad(road);
+    //         InsertVerticalRoad(temp);
+    //     }
+    // }
+
+    void AddRoad(Road road){
+        Road temp = InvertRoad(road);
+        InsertRoad(temp);
+    }
+
+    // void SortDogMaps(){
+    //     std::sort(RoadMap_.begin(), RoadMap_.end());
+    // }
+
+    Road& InvertRoad(Road& road){
+        if(road.GetStart().y > road.GetEnd().y){
+                Point temp = road.GetStart();
+                road.SetStart(road.GetEnd());
+                road.SetEnd(std::move(temp));
+        }
+        if(road.GetStart().x > road.GetEnd().x){
+                Point temp = road.GetStart();
+                road.SetStart(road.GetEnd());
+                road.SetEnd(std::move(temp));
+        }
+        return road;
+    }
+
+    void InsertRoad(Road& road){
+        for(auto& it : RoadMap_){
+            if(it.IsHorizontal() && road.IsHorizontal()){
+                if(it.GetEnd() == road.GetStart()){
+                    it.SetEnd(road.GetEnd());
+                    return;
+                }
+                if(it.GetStart() == road.GetEnd()){
+                    it.SetStart(road.GetStart());
+                    return;
+                }
+            }
+            if(it.IsVertical() && road.IsVertical()){
+                if(it.GetEnd() == road.GetStart()){
+                    it.SetEnd(road.GetEnd());
+                    return;
+                }
+                if(it.GetStart() == road.GetEnd()){
+                    it.SetStart(road.GetStart());
+                    return;
+                }
+            }
+        }
+        RoadMap_.push_back(road);
+    }
+
+    const DogRoads& GetRoadMap() const {
+        return RoadMap_;
+    }
+
+    // const DogRoads& GetHorizontalRoads() const {
+    //     return HorizontalRoads_;
+    // }
+
+private:
+    DogRoads RoadMap_;
+};
+
 class Map {
 public:
     using Id = util::Tagged<std::string, Map>;
@@ -141,6 +234,10 @@ public:
         return roads_;
     }
 
+    const std::vector<Road>& GetRoadMap() const noexcept {
+        return dog_map_.GetRoadMap();
+    }
+
     const Offices& GetOffices() const noexcept {
         return offices_;
     }
@@ -151,6 +248,7 @@ public:
 
     void AddRoad(const Road& road) {
         roads_.emplace_back(road);
+        dog_map_.AddRoad(road);
     }
 
     void AddBuilding(const Building& building) {
@@ -170,6 +268,7 @@ private:
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
+    RoadMap dog_map_;
 };
 
 class Game {
@@ -196,5 +295,6 @@ private:
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
 };
+
 
 }  // namespace model
