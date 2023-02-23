@@ -13,30 +13,39 @@ public:
     GameSession(const model::Map& map)
         : session_map_{map}{}
 
-    const Player& AddDog(std::string name){
-        //auto& road = session_map_.GetRoads()[util::GetRandomNumber(0, session_map_.GetRoads().size())];
-        auto& road = session_map_.GetRoads()[0];
-        float x,y;
-        if(road.IsVertical()){
-            x = road.GetStart().x;
-            // size_t begin = road.GetStart().y;
-            // size_t end = road.GetEnd().y;
-            // y = util::GetRandomNumber(0, 30)+ 0.1 * util::GetRandomNumber(0, 9);
-            y = road.GetStart().y;
-
-            dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+    const Player& AddDog(std::string name, bool randomize){
+        if(randomize){
+            auto& road = session_map_.GetRoads()[util::GetRandomNumber(0, session_map_.GetRoads().size())];
+            float x,y;
+            if(road.IsVertical()){
+                x = road.GetStart().x;
+                size_t begin = road.GetStart().y;
+                size_t end = road.GetEnd().y;
+                y = util::GetRandomNumber(0, 30)+ 0.1 * util::GetRandomNumber(0, 9);
+                dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+            }else{
+                y = road.GetStart().y;
+                size_t begin = road.GetStart().x;
+                size_t end = road.GetEnd().x;
+                x = util::GetRandomNumber(begin, end - 1) + 0.1 * util::GetRandomNumber(0, 9);
+                dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+            }
+            return players_.AddPlayer(dogs_.back());
         }else{
-            y = road.GetStart().y;
-            // size_t begin = road.GetStart().x;
-            // size_t end = road.GetEnd().x;
-            // x = util::GetRandomNumber(begin, end - 1) + 0.1 * util::GetRandomNumber(0, 9);
-            x = road.GetStart().x;              
-            dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+            auto& road = session_map_.GetRoads()[0];
+            float x,y;
+            if(road.IsVertical()){
+                x = road.GetStart().x;
+                y = road.GetStart().y;
+                dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+            }else{
+                y = road.GetStart().y;
+                x = road.GetStart().x;              
+                dogs_.push_back(Dog{std::move(name), Coordinate{x,y}, session_map_.GetDogSpeed()});
+            }
+            return players_.AddPlayer(dogs_.back());
         }
-
-        return players_.AddPlayer(dogs_.back());
     }
-
     const std::optional<Player> FindPlayer(std::string& token){
         std::optional<Player> player = players_.FindPlayer(token);
         return player;

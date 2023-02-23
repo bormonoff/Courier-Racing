@@ -17,7 +17,7 @@ using namespace std::literals;
 template<typename RequestHandler>
 class RequestLoggerHandler{
 public:
-    RequestLoggerHandler(RequestHandler& request)
+    explicit RequestLoggerHandler(RequestHandler&& request)
         : request_handler_{request}{};
     
     template <typename Body, typename Allocator, typename Send>
@@ -31,7 +31,7 @@ public:
             send(response);
         };
 
-        request_handler_(std::forward<decltype(req)>(req), request_sender);
+        request_handler_->operator()(std::forward<decltype(req)>(req), request_sender);
     }
     
 private:
@@ -46,7 +46,7 @@ private:
         BOOST_LOG_TRIVIAL(info) << boost_log::MakeResponse("response sent", boost_log::Response<Body, Fields>(res, ep, time));
     }
 
-    RequestHandler request_handler_;
+    RequestHandler& request_handler_;
 };
 
 

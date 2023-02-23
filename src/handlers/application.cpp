@@ -18,11 +18,26 @@ http::response<http::string_body> Application::MoveDogs(const http::request<http
     }catch(...){
         return ParseError(req); 
     }
-    for(auto& it : sessions_){
-        it.second.MakeOffset(tick);
+
+    if(period_.count()){
+        return TickFail(req);
     }
-    
+
+    UpdateState(tick);
     return OkResponse(req);
+}
+
+http::response<http::string_body> TickFail(const http::request<http::string_body>& req){
+    http::response<http::string_body> response{http::status::bad_request, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+
+    json::object json_res;
+    json_res["code"] = "badRequest";
+    json_res["message"] = "Invalid endpoint";
+    response.body() = json::serialize(json_res);
+    response.content_length(response.body().size());
+    return response;
 }
 
 http::response<http::string_body> OkResponse(const http::request<http::string_body>& req){
@@ -173,7 +188,7 @@ http::response<http::string_body> Application::JoinGame(const http::request<http
         sessions_.emplace(map, game_session::GameSession(*map_model));
     }
 
-    const auto& player = sessions_.find(map) -> second.AddDog(dog_name);
+    const auto& player = sessions_.find(map) -> second.AddDog(dog_name, random_spawn_);
     return Authorization(req, player);
 }
 

@@ -10,6 +10,7 @@
 #include "loggers/boost_log.h"
 #include <exception>
 #include "session/player_token.h"
+#include "commands/options.h"
 
 namespace {
 
@@ -33,20 +34,18 @@ namespace sys = boost::system;
 namespace http = beast::http;
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: game_server <game-config-json>" << std::endl;
-        return EXIT_FAILURE;
-    }
     try{
+        auto args = commands::ParseCommandLine(argc, argv);
+
         boost_log::InitBoostLog();
 
-        model::Game game = json_loader::LoadGame(argv[1]);
-
-        http_handler::RequestHandler handler{game, argv[2]};
-        http_handler::RequestLoggerHandler logger_handler{handler};
+        model::Game game = json_loader::LoadGame(args.config);
 
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
+
+        auto handler = std::make_shared<http_handler::RequestHandler>(ioc, game, args.root, args.milliseconds, args.random_spawn);
+        http_handler::RequestLoggerHandler logger_handler{std::move(handler)};
 
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const boost::system::error_code& error, int signal_number){
@@ -72,7 +71,6 @@ int main(int argc, char* argv[]) {
 
     }
     catch (const std::exception& ex) {
-        std::cout<<"ojdoijd"<<std::endl ;
         BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("server exited", boost_log::ExceptionReciever(EXIT_FAILURE,"shutdown", ex.what()));
         return EXIT_FAILURE;
     }
