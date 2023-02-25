@@ -22,5 +22,4 @@ void tag_invoke(json::value_from_tag, json::value& val, const ExceptionReciever&
            {EXCEPTION, data.what_},
            {WHERE, data.where_}};
 }
-
 } //namespace

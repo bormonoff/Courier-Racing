@@ -1,15 +1,27 @@
-#include "player_token.h"
-#include <iostream>
+#include "session/player_token.h"
 
 namespace game_session{
+    
+const Player& PlayerTokens::AddPlayer(Dog& dog) {
+    const std::string token = GenerateToken();
+    players_.emplace(token, Player{token,dog}); 
+    return players_.find(token)->second;
+}
 
-std::string GenerateToken(){
+const std::optional<Player> PlayerTokens::FindPlayer(std::string token) {
+    if (players_.find(token) != players_.end()) {
+        std::optional<Player> player = players_.find(token)->second;
+        return player;
+    }
+    return std::nullopt;
+}
+
+std::string GenerateToken() {
     std::stringstream ss;
     std::string result;
-    for (int i = 0; i < 32; i++)
-    {
+    for (int i = 0; i < 32; ++i){
         size_t element = util::GetRandomNumber(1, 15);
-        if(element > 9){
+        if (element > 9) { 
             if(element == 10){ss << 'a'; continue;}
             if(element == 11){ss << 'b'; continue;}
             if(element == 12){ss << 'c'; continue;}
@@ -22,5 +34,4 @@ std::string GenerateToken(){
     getline(ss, result);
     return result;
 }
-
 } // namespace

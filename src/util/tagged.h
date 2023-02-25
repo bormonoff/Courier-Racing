@@ -1,4 +1,5 @@
 #pragma once
+
 #include <compare>
 
 namespace util {

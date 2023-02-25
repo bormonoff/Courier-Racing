@@ -1,10 +1,11 @@
 #pragma once
+
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
-#include "../util/tagged.h"
+#include "util/tagged.h"
 
 namespace model {
 
@@ -84,9 +85,6 @@ private:
     Point end_;
 };
 
-// bool XSort(const Road& a, const Road& b);
-// bool YSort(const Road& a, const Road& b);
-
 class Building {
 public:
     explicit Building(Rectangle bounds) noexcept
@@ -133,74 +131,14 @@ class RoadMap{
 public:
     using DogRoads = std::vector<Road>;
 
-    // void AddRoad(Road road){
-    //     if(road.IsHorizontal()){
-    //         Road temp = InvertRoad(road);
-    //         InsertHorizontalRoad(temp); 
-    //     }
-    //     if(road.IsVertical()){
-    //         Road temp = InvertRoad(road);
-    //         InsertVerticalRoad(temp);
-    //     }
-    // }
-
-    void AddRoad(Road road){
-        Road temp = InvertRoad(road);
-        InsertRoad(temp);
-    }
-
-    // void SortDogMaps(){
-    //     std::sort(RoadMap_.begin(), RoadMap_.end());
-    // }
-
-    Road& InvertRoad(Road& road){
-        if(road.GetStart().y > road.GetEnd().y){
-                Point temp = road.GetStart();
-                road.SetStart(road.GetEnd());
-                road.SetEnd(std::move(temp));
-        }
-        if(road.GetStart().x > road.GetEnd().x){
-                Point temp = road.GetStart();
-                road.SetStart(road.GetEnd());
-                road.SetEnd(std::move(temp));
-        }
-        return road;
-    }
-
-    void InsertRoad(Road& road){
-        for(auto& it : RoadMap_){
-            if(it.IsHorizontal() && road.IsHorizontal()){
-                if(it.GetEnd() == road.GetStart()){
-                    it.SetEnd(road.GetEnd());
-                    return;
-                }
-                if(it.GetStart() == road.GetEnd()){
-                    it.SetStart(road.GetStart());
-                    return;
-                }
-            }
-            if(it.IsVertical() && road.IsVertical()){
-                if(it.GetEnd() == road.GetStart()){
-                    it.SetEnd(road.GetEnd());
-                    return;
-                }
-                if(it.GetStart() == road.GetEnd()){
-                    it.SetStart(road.GetStart());
-                    return;
-                }
-            }
-        }
-        RoadMap_.push_back(road);
-    }
-
     const DogRoads& GetRoadMap() const {
         return RoadMap_;
     }
 
-    // const DogRoads& GetHorizontalRoads() const {
-    //     return HorizontalRoads_;
-    // }
-
+    void AddRoad(Road road);
+    void InsertRoad(Road& road);
+    Road& InvertRoad(Road& road);
+    
 private:
     DogRoads RoadMap_;
 };
@@ -295,6 +233,4 @@ private:
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
 };
-
-
 }  // namespace model

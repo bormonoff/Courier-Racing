@@ -1,11 +1,12 @@
 #pragma once
 
+#include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
+
 #include <boost/json.hpp>
 
-#include "../model/model.h"
+#include "model/model.h"
 
 namespace json_loader { 
 
@@ -18,5 +19,4 @@ void ReadBuildingsIntoMap(const json::value& maps, model::Map& map_for_add);
 void ReadOfficesIntoMap(const json::value& maps, model::Map& map_for_add);
 double GetDogSpeed(boost::json::value& file_json, const json::value& maps);
 model::Game LoadGame(const std::filesystem::path& json_path);
-
 }  // namespace json_loader

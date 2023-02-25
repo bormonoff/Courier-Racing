@@ -1,22 +1,24 @@
 #pragma once
-#include "../sdk.h"
-//
+#include "sdk.h"
+
 #include <iostream>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
-#include "../loggers/boost_log.h"
+
+#include "loggers/boost_log.h"
 
 namespace http_server {
 
 void ReportError(boost::system::error_code& error, std::string_view what);
 
 namespace net = boost::asio;
-using tcp = net::ip::tcp;
 namespace beast = boost::beast;
 namespace sys = boost::system;
 namespace http = beast::http;
+using tcp = net::ip::tcp;
 
 class SessionBase{
 public:
@@ -38,24 +40,20 @@ protected:
     virtual void HandleRequest(HttpRequest&& request) = 0;
 
     template<typename Body, typename Field>
-    void Write(http::response<Body, Field>&& response){
+    void Write(http::response<Body, Field>&& response) {
         auto safe_response = std::make_shared<http::response<Body, Field>>(std::move(response));
         auto self = GetSharedThis();
         http::async_write(stream_, *safe_response,
-            [self, safe_response](beast::error_code error, std::size_t bytes_written){
+            [self, safe_response](beast::error_code error, std::size_t bytes_written) {
                 self->OnWrite(safe_response->need_eof(), error, bytes_written);
             });
     }
-
     tcp::endpoint GetEndpoint();
 
 private:                                                     
     void Read();
-
     void OnRead(beast::error_code error, std::size_t bytes_read);
-
     void OnWrite(bool close, beast::error_code error, std::size_t bytes_written);
-
     void Close();
 
     beast::tcp_stream stream_;
@@ -68,8 +66,8 @@ class Session : public SessionBase, public std::enable_shared_from_this<Session<
 public:
     template<typename Handler>
     Session(tcp::socket&& socket, Handler&& handler)
-        : SessionBase(std::move(socket))
-        , request_handler_(std::forward<Handler>(handler)){
+        : SessionBase(std::move(socket)), 
+          request_handler_(std::forward<Handler>(handler)) {
     }
 
 private:
@@ -101,7 +99,7 @@ public:
         acceptor_.listen(net::socket_base::max_listen_connections);
     }
 
-    void Run(){
+    void Run() {
         DoAccept();
     }
 
@@ -112,8 +110,8 @@ private:
             beast::bind_front_handler(&Listener::OnAccept, this->shared_from_this()));
     }
 
-    void OnAccept(sys::error_code error, tcp::socket socket){
-        if(error){
+    void OnAccept(sys::error_code error, tcp::socket socket) {
+        if (error) {
             return ReportError(error, "accept");
         }
 
@@ -122,7 +120,7 @@ private:
         DoAccept();
     }
 
-    void AssyncRunSession(tcp::socket&& socket){
+    void AssyncRunSession(tcp::socket&& socket) {
         std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_)->Run();
     }
 

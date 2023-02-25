@@ -1,10 +1,12 @@
-#include "dog.h"
+#include <exception>
+
+#include "session/dog.h"
 
 namespace game_session{
 
 uint32_t Dog::count = 0;
 
-const std::string Dog::GetDirection() const{
+const std::string Dog::GetDirection() const {
     switch (direction_){
         case Direction::LEFT:
             return "L";
@@ -18,14 +20,14 @@ const std::string Dog::GetDirection() const{
     throw "can't make response dog::GetDirection()";
 }
 
-void Dog::SetSpeed(std::string&& direction){
-    if(direction.empty()){
+void Dog::SetSpeed(std::string&& direction) {
+    if (direction.empty()) {
         speed_.dx = 0;
         speed_.dy = 0;
         return;
     }
 
-    switch (direction.at(0)){
+    switch (direction.at(0)) {
         case ('L'):
             direction_ = Direction::LEFT;
             speed_.dx = -default_speed;
@@ -47,9 +49,24 @@ void Dog::SetSpeed(std::string&& direction){
             speed_.dy = default_speed;
             return;
     }
-    throw "Invalid move field";
+    throw "Error in dog SetSpeed func";
 }
 
+Coordinate Dog::TargetPosition(size_t& time) {
+    return Coordinate{coordinate_.x + speed_.dx * time* 0.001, 
+                        coordinate_.y + speed_.dy * time * 0.001};
+}
 
+void Dog::SetCoordY(double y) {
+    coordinate_.y = y;
+}
 
-} // namespace
+void Dog::SetCoordX(double x) {
+    coordinate_.x = x;
+}
+
+void Dog::MoveDog(Coordinate& target) {
+    coordinate_.x = target.x;
+    coordinate_.y = target.y;
+}
+}  // namespace game_session

@@ -4,25 +4,25 @@
 
 namespace game_session{
 
-struct Coordinate{
+struct Coordinate {
     double x, y;
 };
 
-struct Speed{
+struct Speed {
     double dx, dy;
 };
 
-enum Direction{
+enum Direction { 
     LEFT,
     UP,
     RIGHT,
     DOWN
 };
 
-class Dog{
+class Dog {
 public:
     Dog(std::string name, Coordinate start, double speed)
-        :name_{name}, coordinate_{start}, default_speed{speed}{
+        :name_{name}, coordinate_{start}, default_speed{speed} {
             id_ = count;
             count++;
             speed_.dx = 0;
@@ -30,27 +30,30 @@ public:
             direction_ = Direction::UP;
     }
 
-    void SetSpeed(std::string&& drection);
-    void MoveDog(Coordinate& target){
-        coordinate_.x = target.x;
-        coordinate_.y = target.y;
+    
+
+    const uint16_t& GetID() const {
+        return id_;
     }
 
-    void SetCoordX(double x){
-        coordinate_.x = x;
+    const std::string& GetName() const {
+        return name_;
     }
-    void SetCoordY(double y){
-        coordinate_.y = y;
+
+    const Coordinate& GetStartPoint() const {
+        return coordinate_;
     }
-    const uint16_t& GetID() const {return id_;}
-    const std::string& GetName() const {return name_;}
-    const Coordinate& GetStartPoint() const {return coordinate_;}
-    const Speed& GetSpeed() const {return speed_;}
+
+    const Speed& GetSpeed() const {
+        return speed_;
+    }
+
+    void SetSpeed(std::string&& drection);
+    void MoveDog(Coordinate& target);
+    void SetCoordX(double x);
+    void SetCoordY(double y);
     const std::string GetDirection() const;   
-    Coordinate TargetPosition(size_t& time){
-        return Coordinate{coordinate_.x + speed_.dx * time* 0.001, 
-                          coordinate_.y + speed_.dy * time * 0.001};
-    }
+    Coordinate TargetPosition(size_t& time);
 
 private:
     std::string name_;
@@ -63,4 +66,4 @@ private:
     uint8_t direction_;
 };
 
-} // namespace
+}  // namespace game_session
