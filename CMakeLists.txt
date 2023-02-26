@@ -32,6 +32,7 @@ add_executable(game_server
 	src/handlers/application.cpp
 	src/handlers/api_response_storage.h
 	src/handlers/api_response_storage.cpp
+	src/handlers/literals_storage.h
 	src/session/dog.h
 	src/session/dog.cpp
 	src/session/game_session.h

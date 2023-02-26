@@ -1,6 +1,6 @@
 #include "time/ticker.h"
 
-namespace time_control{
+namespace time_control {
     
 void Ticker::Start() {
     last_tick_ = std::chrono::steady_clock::now();

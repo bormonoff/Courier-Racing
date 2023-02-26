@@ -1,4 +1,5 @@
 #include "handlers/api_response_storage.h"
+#include "util/literals_storage.h"
 
 namespace http_handler{
 
@@ -8,8 +9,8 @@ Response NotFound(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
     json::object json_res;
-    json_res["code"] = "mapNotFound";
-    json_res["message"] = "Resource not found";
+    json_res[CODE] = MAP_NOT_FOUND_CODE;
+    json_res[MESSAGE] = MAP_NOT_FOUND_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -19,7 +20,8 @@ Response OkResponse(const Request& req) {
     Response response{http::status::ok, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
-    response.body() = "{}";
+    
+    response.body() = EMPTY_BODY;
     response.content_length(response.body().size());
     return response;
 }
@@ -37,17 +39,17 @@ Response FindAllPlayerStatesOnMap(const Request& req,
         json::array position;
         position.push_back(it.second.GetDogStart().x);
         position.push_back(it.second.GetDogStart().y);
-        data["pos"] = position;
+        data[POSITION] = position;
 
         json::array speed;
         speed.push_back(it.second.GetDogSpeed().dx);
         speed.push_back(it.second.GetDogSpeed().dy);
-        data["speed"] = speed;
+        data[SPEED] = speed;
 
-        data["dir"] = it.second.GetDogDirection();
+        data[DIRECTION] = it.second.GetDogDirection();
         ID[std::to_string(it.second.GetDogID())] = data;
     }
-    json_res["players"] = ID;
+    json_res[PLAYERS] = ID;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -63,7 +65,7 @@ Response FindAllPlayersOnMap(const Request& req,
     size_t count = 0;
     for (auto it : session.GetPlayerTokens().GetPlayers()) {
         json::object temp_respond;
-        temp_respond["name"] = (it.second).GetDogName();
+        temp_respond[NAME] = (it.second).GetDogName();
         json_res[std::to_string(count)] = temp_respond;
         ++count;
     }
@@ -76,11 +78,11 @@ Response MethodNotAllowed(const Request& req) {
     Response response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
-    response.set(http::field::allow, "GET, HEAD");
+    response.set(http::field::allow, Allow::GETANDHEAD);
 
     json::object json_res;
-    json_res["code"] = "invalidMethod";
-    json_res["message"] = "Invalid Method";
+    json_res[CODE] = INVALID_METHOD_CODE;
+    json_res[MESSAGE] = GET_AND_HEAD_ALLOW_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -92,8 +94,8 @@ Response CantAuthorize(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     
     json::object json_res;
-    json_res["code"] = "invalidToken";
-    json_res["message"] = "Authorization header is miising or token is invalid";
+    json_res[CODE] = INVALID_TOKEN_CODE;
+    json_res[MESSAGE] = INVALID_TOKEN_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -105,8 +107,8 @@ Response CantFindPlayer(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     
     json::object json_res;
-    json_res["code"] = "unknownToken";
-    json_res["message"] = "Player token has not been found";
+    json_res[CODE] = UNCNOWN_TOKEN_CODE;
+    json_res[MESSAGE] = UNCNOWN_TOKEN_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -116,11 +118,11 @@ Response NotAllowed(const Request& req) {
     Response response{http::status::method_not_allowed, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
-    response.set(http::field::allow, "POST");
+    response.set(http::field::allow, Allow::POST);
 
     json::object json_res;
-    json_res["code"] = "invalidMethod";
-    json_res["message"] = "Only POST method is expected :(";
+    json_res[CODE] = INVALID_METHOD_CODE;
+    json_res[MESSAGE] = POST_ALLOW_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -132,8 +134,8 @@ Response InvalidPlayerName(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
     json::object json_res;
-    json_res["code"] = "invalidArgument";
-    json_res["message"] = "Invalid name";
+    json_res[CODE] = INVALID_TOKEN_CODE;
+    json_res[MESSAGE] = INVALID_NAME_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -145,8 +147,8 @@ Response ParseError(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
     json::object json_res;
-    json_res["code"] = "invalidArgument";
-    json_res["message"] = "Can't parse file, please try again :(";
+    json_res[CODE] = INVALID_TOKEN_CODE;
+    json_res[MESSAGE] = INVALID_FORMAT_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -158,8 +160,8 @@ Response BadRequest(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
     json::object json_res;
-    json_res["code"] = "badRequest";
-    json_res["message"] = "Bad request";
+    json_res[CODE] = BAD_REQUEST_CODE;
+    json_res[MESSAGE] = BAD_REQUEST_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -169,11 +171,11 @@ Response MethodGETAllowed(const Request& req) {
     Response response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
-    response.set(http::field::allow, "GET");
+    response.set(http::field::allow, Allow::GET);
 
     json::object json_res;
-    json_res["code"] = "invalidMethod";
-    json_res["message"] = "Invalid Method";
+    json_res[CODE] = INVALID_METHOD_CODE;
+    json_res[MESSAGE] = GET_ALLOW_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -185,8 +187,8 @@ Response TickFail(const Request& req) {
     response.set(http::field::cache_control, ContentType::NO_CACHE);
 
     json::object json_res;
-    json_res["code"] = "badRequest";
-    json_res["message"] = "Invalid endpoint";
+    json_res[CODE] = BAD_REQUEST_CODE;
+    json_res[MESSAGE] = INVALID_ENDPOINT_MESSAGE;
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -194,12 +196,12 @@ Response TickFail(const Request& req) {
 
 Response ReturnMap(const model::Map* const this_map, const Request& req) {
     json::object map;
-        map["id"] = *this_map->GetId();
-        map["name"] = this_map->GetName();
+        map[ID] = *this_map->GetId();
+        map[NAME] = this_map->GetName();
 
-    map["roads"] = ReturnRoads(this_map);
-    map["buildings"] = ReturnBuildings(this_map);   
-    map["offices"] = ReturnOffices(this_map);
+    map[ROADS] = ReturnRoads(this_map);
+    map[BUILDINGS] = ReturnBuildings(this_map);   
+    map[OFFICES] = ReturnOffices(this_map);
 
     http::response<http::string_body> response{http::status::ok, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
@@ -214,14 +216,14 @@ json::array ReturnRoads(const model::Map* const this_map) {
     for (const auto &it : this_map-> GetRoads()) {
         json::object road;
         model::Point start_point = it.GetStart();
-        road["x0"] = start_point.x;
-        road["y0"] = start_point.y; 
+        road[X0] = start_point.x;
+        road[Y0] = start_point.y; 
        
         model::Point end_point = it.GetEnd();
         if (it.IsHorizontal()) {
-            road["x1"] = end_point.x;
+            road[X1] = end_point.x;
         } else {
-            road["y1"] = end_point.y;
+            road[Y1] = end_point.y;
         }
         roads.push_back(road);
     }
@@ -233,10 +235,10 @@ json::array ReturnBuildings(const model::Map* const this_map) {
     for(const auto &it : this_map-> GetBuildings()){
         json::object building;
         model::Rectangle bounds= it.GetBounds();
-        building["x"] = bounds.position.x;
-        building["y"] = bounds.position.y;
-        building["w"] = bounds.size.width;
-        building["h"] = bounds.size.height;
+        building[X] = bounds.position.x;
+        building[Y] = bounds.position.y;
+        building[WIDHT] = bounds.size.width;
+        building[HEIGHT] = bounds.size.height;
         buildings.push_back(building);
     }
     return buildings;
@@ -246,15 +248,15 @@ json::array ReturnOffices(const model::Map* const this_map) {
     json::array offices;
     for (const auto &it : this_map-> GetOffices()) {
         json::object office;
-        office["id"] = *it.GetId();
+        office[ID] = *it.GetId();
 
         model::Point position = it.GetPosition();
-        office["x"] = position.x;
-        office["y"] = position.y;
+        office[X] = position.x;
+        office[Y] = position.y;
 
         model::Offset offset = it.GetOffset();
-        office["offsetX"] = offset.dx;
-        office["offsetY"] = offset.dy;
+        office[OFFSETX] = offset.dx;
+        office[OFFSETY] = offset.dy;
         offices.push_back(office);
     }
     return offices;

@@ -1,6 +1,6 @@
 #include "util/utils.h"
 
-namespace util{
+namespace util {
 
 uint64_t CurrentTime() {
     using namespace std::chrono;

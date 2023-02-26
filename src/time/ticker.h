@@ -4,22 +4,20 @@
 
 #include "core/http_server.h"
 
-namespace time_control{
+namespace time_control {
 
 namespace net = boost::asio;
 namespace sys = boost::system;
-
 
 class Ticker : public std::enable_shared_from_this<Ticker> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
     using Handler = std::function<void(size_t)>;
 
-    Ticker(Strand strand, std::chrono::milliseconds period, Handler handler):
-        strand_{strand},
-        period_{period},
-        handler_{handler}{   
-    }
+    Ticker(Strand strand, std::chrono::milliseconds period, Handler handler)
+        : strand_{strand},
+          period_{period},
+          handler_{handler} {}
 
     void Start();
 

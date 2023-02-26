@@ -14,13 +14,6 @@ namespace json = boost::json;
 using Response = http::response<http::string_body>;
 using Request = http::request<http::string_body>;
 
-struct ContentType {
-    ContentType() = delete;
-    constexpr static std::string_view TYPE_TEXT_HTML = "text/html";
-    constexpr static std::string_view TYPE_JSON = "application/json";
-    constexpr static std::string_view NO_CACHE = "no-cache";
-};
-
 Response FindAllPlayerStatesOnMap(const Request& req, 
                                   const game_session::GameSession& session);
 Response FindAllPlayersOnMap(const Request& req,

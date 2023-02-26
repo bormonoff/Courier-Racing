@@ -9,16 +9,16 @@ void Application::UpdateState(size_t milliseconds) {
 }
 
 Response Application::MoveDogs(const Request& req) {
-    if (req.method_string() != "POST") {
+    if (req.method_string() != Allow::POST) {
         return NotAllowed(req);
     }
     size_t tick;
     try {
         json::value parse_req = json::parse(req.body());
-        if (!parse_req.as_object().at("timeDelta").is_int64()) {
+        if (!parse_req.as_object().at(TIMEDELTA).is_int64()) {
             throw std::runtime_error("Invalid timeDelta");
         }
-        tick = json::value_to<size_t>(parse_req.as_object().at("timeDelta"));
+        tick = json::value_to<size_t>(parse_req.as_object().at(TIMEDELTA));
     } catch(...) {
         return ParseError(req); 
     }
@@ -30,7 +30,7 @@ Response Application::MoveDogs(const Request& req) {
 }
 
 Response Application::ChangeSpeed(const Request& req) {
-    if (req.method_string() != "POST") {
+    if (req.method_string() != Allow::POST) {
         return MethodNotAllowed(req);
     }
     std::string token;
@@ -61,7 +61,7 @@ Response Application::ChangeDirectory(const Request& req,
     }
     std::string move_field;
     try {
-        move_field =  static_cast<std::string>(parse_req.at("move").as_string());
+        move_field =  static_cast<std::string>(parse_req.at(MOVE).as_string());
     } catch(...) {    
         return ParseError(req);
     }
@@ -73,13 +73,13 @@ Response Application::ChangeDirectory(const Request& req,
     } catch(...) {
         return ParseError(req);
     }
-    response.body() = "{}";
+    response.body() = EMPTY_BODY;
     response.content_length(response.body().size());
     return response;
 }
 
 Response Application::GetState(const Request& req) {
-    if (req.method_string() != "GET") {
+    if (req.method_string() != Allow::GET) {
         return MethodGETAllowed(req);
     }
     std::string token;
@@ -99,15 +99,15 @@ Response Application::GetState(const Request& req) {
 }
 
 Response Application::JoinGame(const Request& req) {
-    if (req.method_string() != "POST") {
+    if (req.method_string() != Allow::POST) {
         return NotAllowed(req);
     }
     std::string dog_name;
     std::string map;
     try {
         json::value parse_req = json::parse(req.body());
-        dog_name = static_cast<std::string>(parse_req.at("userName").as_string());
-        map = static_cast<std::string>(parse_req.at("mapId").as_string());
+        dog_name = static_cast<std::string>(parse_req.at(USERNAME).as_string());
+        map = static_cast<std::string>(parse_req.at(MAPID).as_string());
     } catch(...) {
         return ParseError(req); 
     }
@@ -127,7 +127,7 @@ Response Application::JoinGame(const Request& req) {
 }
 
 Response Application::GetPlayers(const Request& req) {
-    if (req.method_string() != "GET" && req.method_string() != "HEAD") {
+    if (req.method_string() != Allow::GET && req.method_string() != Allow::HEAD) {
         return MethodNotAllowed(req);
     }
     std::string token;
@@ -177,8 +177,8 @@ Response Application::Authorization(const Request& req,
     
     json::object json_res;
     std::string pl = player.GetToken();
-    json_res["authToken"] = player.GetToken();
-    json_res["playerId"] = player.GetDog().GetID();
+    json_res[AUTHTOKEN] = player.GetToken();
+    json_res[PLAYERID] = player.GetDog().GetID();
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
     return response;
@@ -195,8 +195,8 @@ Response Application::ReturnMapsArray(const Request& req){
     json::array maps;
     for (const auto& it : game_.GetMaps()) {
         json::object map_it;
-        map_it["id"] = *it.GetId();
-        map_it["name"] = it.GetName();
+        map_it[ID] = *it.GetId();
+        map_it[NAME] = it.GetName();
         maps.push_back(map_it);
     };
     response.body() = json::serialize(maps);
