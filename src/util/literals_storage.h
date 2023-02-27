@@ -71,7 +71,7 @@ struct Allow {
     const std::string Y1 = "y1"s;
     const std::string WIDHT = "w"s;
     const std::string HEIGHT = "h"s;
-    const std::string OFFSETX = "offestX"s;
+    const std::string OFFSETX = "offsetX"s;
     const std::string OFFSETY = "offsetY"s;
 }  // namespace http_handler
 

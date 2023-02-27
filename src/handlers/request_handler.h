@@ -13,7 +13,7 @@ std::vector<std::string> ReadURL(const http::request<http::string_body>& req);
 http::response<http::string_body> FileNotFound(
         const http::request<http::string_body>& req);
 
-class RequestHandler : public std::enable_shared_from_this<RequestHandler>{
+class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
 

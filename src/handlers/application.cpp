@@ -1,6 +1,6 @@
 #include "handlers/application.h"
 
-namespace http_handler{
+namespace http_handler {
 
 void Application::UpdateState(size_t milliseconds) {
     for (auto& it : sessions_) {
@@ -16,10 +16,10 @@ Response Application::MoveDogs(const Request& req) {
     try {
         json::value parse_req = json::parse(req.body());
         if (!parse_req.as_object().at(TIMEDELTA).is_int64()) {
-            throw std::runtime_error("Invalid timeDelta");
+            throw std::exception();
         }
         tick = json::value_to<size_t>(parse_req.as_object().at(TIMEDELTA));
-    } catch(...) {
+    } catch(std::exception& ex) {
         return ParseError(req); 
     }
     if (period_.count()) {
@@ -36,10 +36,10 @@ Response Application::ChangeSpeed(const Request& req) {
     std::string token;
     try {
         token = static_cast<std::string>(req[http::field::authorization].substr(7));
-        if (token.size() != 32) {
-            throw "Wrong token";
-        }
-    } catch(...) {
+    } catch(std::exception& ex) {
+        return CantAuthorize(req);
+    }
+    if (token.size() != 32) {
         return CantAuthorize(req);
     }
     std::optional<game_session::Player> player = FindPlayerViaToken(token);
@@ -62,7 +62,7 @@ Response Application::ChangeDirectory(const Request& req,
     std::string move_field;
     try {
         move_field =  static_cast<std::string>(parse_req.at(MOVE).as_string());
-    } catch(...) {    
+    } catch(std::exception& ex) {    
         return ParseError(req);
     }
     if (req[http::field::content_type] != ContentType::TYPE_JSON) {
@@ -70,7 +70,7 @@ Response Application::ChangeDirectory(const Request& req,
     }
     try {
         player.SetDogSpeed(std::move(move_field));
-    } catch(...) {
+    } catch(std::exception& ex) {
         return ParseError(req);
     }
     response.body() = EMPTY_BODY;
@@ -85,10 +85,10 @@ Response Application::GetState(const Request& req) {
     std::string token;
     try {
         token = static_cast<std::string>(req[http::field::authorization].substr(7));
-        if (token.size() != 32) {
-            throw "Wrong token";
-        }
-    } catch(...) {
+    } catch(std::exception& ex) {
+        return CantAuthorize(req);
+    }
+    if (token.size() != 32) {
         return CantAuthorize(req);
     }
     std::optional<game_session::GameSession> session = FindSessionViaToken(token);
@@ -108,7 +108,7 @@ Response Application::JoinGame(const Request& req) {
         json::value parse_req = json::parse(req.body());
         dog_name = static_cast<std::string>(parse_req.at(USERNAME).as_string());
         map = static_cast<std::string>(parse_req.at(MAPID).as_string());
-    } catch(...) {
+    } catch(std::exception& ex) {
         return ParseError(req); 
     }
     if (dog_name == "") {
@@ -133,11 +133,11 @@ Response Application::GetPlayers(const Request& req) {
     std::string token;
     try {
         token = static_cast<std::string>(req[http::field::authorization].substr(7));
-        if (token.size() != 32) {
-            throw "Wrong token";
-        }
-    } catch(...) {
+    } catch(std::exception& ex) {
         return CantAuthorize(req);
+    }
+    if (token.size() != 32) {
+            return CantAuthorize(req);
     }
     std::optional<game_session::GameSession> session = FindSessionViaToken(token);
     if (session != std::nullopt) {

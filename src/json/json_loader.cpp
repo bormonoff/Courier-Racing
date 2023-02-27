@@ -45,7 +45,7 @@ double GetDogSpeed(boost::json::value& file_json, const json::value& maps) {
     double speed = file_json.at(DEFAULTDOGSPEED).as_double();
     try {
         speed = maps.at(DOGSPEED).as_double();
-    } catch(...) {}
+    } catch(std::exception& ex) {}
     return speed;
 }
 
@@ -79,7 +79,7 @@ void ReadBuildingsIntoMap(const json::value& maps, model::Map& map_for_add) {
 
 void ReadOfficesIntoMap(const json::value& maps, model::Map& map_for_add) {
     for (const auto& offices : maps.at(OFFICES).as_array()) {
-        std::string officeID = static_cast<std::string>(offices.at("id").as_string());
+        std::string officeID = static_cast<std::string>(offices.at(ID).as_string());
         int x = std::stoi(json::serialize(offices.at(X)));
         int y = std::stoi(json::serialize(offices.at(Y)));
         int offsetX = std::stoi(json::serialize(offices.at(OFFSETX)));

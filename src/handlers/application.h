@@ -12,24 +12,25 @@
 #include "model/model.h"
 #include "time/ticker.h"
 
-namespace http_handler{
+namespace http_handler {
 
 namespace net = boost::asio;
 namespace http = boost::beast::http;
 namespace json = boost::json;
+namespace sys = boost::system;
 
 using Strand = net::strand<net::io_context::executor_type>;
 using Response = http::response<http::string_body>;
 using Request = http::request<http::string_body>;
 
-class Application{
+class Application {
 public:
     explicit Application(model::Game& game, Strand& strand, 
                          size_t period, bool random_spawn)
-        : game_{game}
-        , strand_{strand}
-        , period_{std::chrono::milliseconds(period)}
-        , random_spawn_{random_spawn}{
+        : game_{game},
+          strand_{strand},
+          period_{std::chrono::milliseconds(period)},
+          random_spawn_{random_spawn} {
         if(period){
             ticker_ = std::make_shared<time_control::Ticker>(
                 strand_, 
