@@ -7,17 +7,21 @@
 #include "session/player_token.h"
 #include "util/utils.h"
 
-namespace game_session{
+namespace game_session {
 
 using FindRoadOpt = std::pair<std::optional<model::Road>, std::optional<model::Road>>;
 
-class GameSession{
+class GameSession {
 public:
     GameSession(const model::Map& map)
         : session_map_{map}{}
 
     const PlayerTokens& GetPlayerTokens() const {
         return players_;
+    }
+
+    const model::Map& GetMap() const {
+        return session_map_;
     }
 
     const Player& AddDog(std::string name, bool randomize);
@@ -27,6 +31,8 @@ public:
                                 Dog& dog);
     FindRoadOpt FindRoad(const std::vector<model::Road>& roads, Dog& dog) const;
     void MakeOffset(size_t& time);
+    void GenerateThingsOnMap(size_t time);
+    
 private:
     const model::Map& session_map_;
     std::deque<Dog> dogs_;

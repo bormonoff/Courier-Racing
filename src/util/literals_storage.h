@@ -54,15 +54,18 @@ struct Allow {
     const std::string NAME = "name"s;
     const std::string ID = "id"s;
     const std::string POSITION = "pos"s;
+    const std::string TYPE = "type"s;
     const std::string SPEED = "speed"s;
     const std::string DIRECTION = "dir"s;
     const std::string PLAYERS = "players"s;
     const std::string AUTHTOKEN = "authToken"s;
     const std::string PLAYERID = "playerId"s;
+    const std::string LOSTOBJECTS = "lostObjects"s;
     //Map literals
     const std::string ROADS = "roads"s;
     const std::string BUILDINGS = "buildings"s;
     const std::string OFFICES = "offices"s;
+    const std::string LOOTTYPES = "lootTypes"s;
     const std::string X = "x"s;
     const std::string X0 = "x0"s;
     const std::string X1 = "x1"s;

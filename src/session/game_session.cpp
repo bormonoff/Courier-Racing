@@ -110,4 +110,8 @@ void GameSession::MakeOffset(size_t& time) {
         it.MoveDog(target);
     }
 }
+
+void GameSession::GenerateThingsOnMap(size_t time) { 
+    session_map_.GenerateThings(time, dogs_.size());
+}
 }  // namespace game_session

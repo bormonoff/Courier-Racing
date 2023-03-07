@@ -1,19 +1,65 @@
 const loadedTiles = {};
 let loadedActor = undefined;
+let loadedLootTypes = [];
 let globalScene;
 let mixers = [];
 let playerId;
 let camera;
+let lootTypesLoaded = false;
+const lootRotationSpeed = 0.0025;
 
-function loadRoadTiles() {
-  const loader = new THREE.TextureLoader();
-  loader.setPath( 'assets/' );
-  for(k of ['nt', 't', 'tr', 'v', 'vh']) {
-     loadedTiles[k] = new THREE.MeshBasicMaterial({map: loader.load('road_' + k + '.png')});
+let pos_arr = [];
+
+const objLoader = new THREE.OBJLoader();
+
+function loadLootType(loot, then) {
+  if(loot['type'] == 'obj') {
+    loot['file'] = objLoader.load(loot['file'], function(obj) {
+      obj.scale.set(loot['scale'],loot['scale'],loot['scale']);
+      obj.rotation.set(Math.PI*loot['rotation']/180,0,0);
+      paint(obj, loot['color']);
+      then(obj);
+    });
   }
 }
 
-loadRoadTiles();
+function loadLootTypes(then) {
+  let objectsToLoad = map['lootTypes'].length;
+  for(i in map['lootTypes']) {
+    const idx = i;
+    const data = map['lootTypes'][i];
+    loadLootType(data, function(obj){
+      loadedLootTypes[idx] = {
+        obj: obj,
+        data: data
+      };
+      if (--objectsToLoad == 0) {
+        lootTypesLoaded = true;
+        then();
+      }
+    });
+  }
+}
+
+function vec_norm(v1) {
+  return Math.hypot(v1[0], v1[1]);
+}
+function vec_dot(v1, v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1];
+}
+function vec_sub(v1, v2) {
+  return [v1[0] - v2[0], v1[1] - v2[1]];
+}
+function vec_sum(v1, v2) {
+  return [v1[0] + v2[0], v1[1] + v2[1]];
+}
+function vec_mul(v1, s1) {
+  return [v1[0]*s1, v1[1]*s1];
+}
+function vec_div(v1, s1) {
+  return vec_mul(v1, 1/s1);
+}
+
 const roadEdge = new THREE.MeshPhongMaterial({color: '#AAA'});
 const roadH = 0.55;
 
@@ -71,10 +117,13 @@ class GameState {
     this.updateInProgress = false;
     this.playersSuncInProgress = false;
     this.ticks = 0;
-    this.posUpdateInterval = 1;
+    this.posUpdateInterval = 5;
     this.playersUpdateInterval = 50;
     this.keyState = new KeyState();
     this.currentState = {};
+    this.requestInstantUpdate = false;
+    this.cameraPos = undefined;
+    this.lostObjects = {};
 
     this._updateState(function() {
       self.stateLoaded = true;
@@ -94,10 +143,11 @@ class GameState {
     if (!this.started)
       return false;
 
-    if (this.ticks % this.posUpdateInterval == 0 && !this.updateInProgress) {
+    if ((this.ticks % this.posUpdateInterval == 0 || this.requestInstantUpdate) && !this.updateInProgress) {
+      this.requestInstantUpdate = false;
       this._updateState(function() {
         self._applyDesiredState();
-        self._instantApplyState();
+        //self._instantApplyState();
       });
     }
 
@@ -122,6 +172,7 @@ class GameState {
   }
 
   _pressKey(keys, then) {
+    const self = this;
     $.post({
       url: '/api/v1/game/player/action',
       dataType: 'json',
@@ -133,6 +184,7 @@ class GameState {
         xhr.setRequestHeader ("Authorization", "Bearer " + Cookies.get('authToken'));
       }
     }).done(function(x){
+      self.requestInstantUpdate = true;
       then();
     })
   }
@@ -141,23 +193,32 @@ class GameState {
     if (this.started || !this.stateLoaded || !this.playersLoaded) {
       return;
     }
+
     this.started = true;
     this._applyDesiredState();
     this._instantApplyState();
 
     if (this.desiredState.players[playerId] !== undefined) {
       const thisPlayer = this.desiredState.players[playerId];
-      moveCameraTo(thisPlayer['pos'][0], thisPlayer['pos'][1]);
+      this.cameraPos = thisPlayer.pos;
+      this.cameraUpdateTs = performance.now();
+      //this._moveCamera();
+      moveCameraTo(thisPlayer.pos[0], thisPlayer.pos[1]);
     }
   }
 
   _interpolateState() {
+    const nextTime = performance.now();
     const delta = performance.now() - this.stateTime;
-    const speedMul = 1/10000;
+    const speedMul = 1/1000;
+
     Object.entries(this.desiredState['players']).forEach(([id, playerPos]) => {
-      this.currentState['players'][id]['pos'][0] += delta * this.currentState['players'][id]['speed'][0] * speedMul;
-      this.currentState['players'][id]['pos'][1] += delta * this.currentState['players'][id]['speed'][1] * speedMul;
+      this.currentState.players[id].pos = vec_sum(this.currentState.players[id].pos, vec_mul(
+          this.currentState['players'][id].speed, delta * speedMul
+      ));
     });
+
+    this.stateTime = nextTime;
   }
 
   _syncPlayers(then) {
@@ -223,8 +284,23 @@ class GameState {
     setAnimation(self.players[id].object, playerPos['speed'][0] != 0 || playerPos['speed'][1] != 0)
 
     if(id == playerId) {
-      moveCameraTo(playerPos['pos'][0], playerPos['pos'][1]);
+      moveCameraTo(playerPos.pos[0], playerPos.pos[1]);
     }
+  }
+
+  _moveCamera() {
+    if (this.cameraPos === undefined) {
+      return;
+    }
+
+    const thisPlayer = this.desiredState.players[playerId];
+    const nowTime = performance.now();
+    const delta = (nowTime - this.cameraUpdateTs) / 1000;
+
+    this.cameraPos = vec_sum(this.cameraPos, vec_mul(thisPlayer.speed, delta));
+    moveCameraTo(this.cameraPos[0], this.cameraPos[1]);
+
+    this.cameraUpdateTs = nowTime;
   }
 
   _instantApplyState() {
@@ -235,6 +311,38 @@ class GameState {
       }
       self._movePlayerTo(id, playerPos);
     });
+    //self._moveCamera();
+  }
+
+  _showLostObjects(objects) {
+    let self = this;
+    const nowTime = performance.now();
+
+    Object.entries(objects).forEach(([id, data]) => {
+      if (self.lostObjects[id] === undefined) {
+        const object = THREE.SkeletonUtils.clone(loadedLootTypes[data['type']]['obj']);
+        self.lostObjects[id] = {
+          object:object,
+          data:data
+        };
+        //paint(object, getRandomColor(127));
+        self.scene.add(object);
+      }
+      self.lostObjects[id].object.position.set(data["pos"][0] + .5, roadH + 0.2, data["pos"][1] + .5);
+      self.lostObjects[id].object.rotation.z = lootRotationSpeed * nowTime;
+    });
+
+    const objsToDelete = [];
+
+    for(var id in self.lostObjects) {
+      if (objects[id]==undefined) {
+        objsToDelete.push(id);
+      }
+    }
+
+    for(var id of objsToDelete) {
+      delete self.lostObjects[id];
+    }
   }
 
   _updateState(then) {
@@ -252,12 +360,71 @@ class GameState {
     })
   }
 
-  _applyDesiredState() {
-    const old_players = this.currentState['players'] !== undefined ? this.currentState['players'] : {};
-    const new_players = {};
-
+  _interpolateRotation(old_pos, new_pos) {
     const pi = Math.PI;
     const rot_speed = pi / 300;
+
+    const newDir = convDirection(new_pos['dir']);
+    if (old_pos['desired_dir'] != newDir) {
+      new_pos['converted_dir'] = old_pos['converted_dir'];
+      new_pos['base_dir'] = old_pos['converted_dir'];
+      new_pos['desired_dir'] = newDir;
+      new_pos['dir_time'] = performance.now();
+    }
+    else {
+      new_pos['base_dir'] = old_pos['base_dir'];
+      new_pos['desired_dir'] = old_pos['desired_dir'];
+      new_pos['dir_time'] = old_pos['dir_time'];
+
+      const delta = performance.now() - new_pos['dir_time'];
+      const rot_delta = new_pos['desired_dir'] - new_pos['base_dir'];
+      var rot_dir;
+      if (rot_delta <= -pi || (0 <= rot_delta && rot_delta < pi)) {
+        rot_dir = 1;
+      }
+      else {
+        rot_dir = -1;
+      }
+
+      const abs_delta = Math.abs(rot_delta);
+      const real_rot_delta = abs_delta >= pi ? (2*pi - abs_delta) : abs_delta;
+
+      if (delta * rot_speed > real_rot_delta) {
+        new_pos['converted_dir'] = old_pos['desired_dir'];
+      }
+      else {
+        new_pos['converted_dir'] = old_pos['base_dir'] + 
+          rot_dir * delta * rot_speed;
+      }
+    }
+  }
+
+  _interpolatePosition(cur_pos, new_pos, delta) {
+    const speed = vec_norm(new_pos.speed);
+    const dest = vec_norm(vec_sub(cur_pos.pos, new_pos.pos));
+
+    if (speed < 0.1 || dest > 0.3) 
+      return;
+
+    const dest_t = 0.1;
+
+    const dest_p = vec_sum(new_pos.pos, vec_mul(new_pos.speed, dest_t));
+
+    new_pos.pos = cur_pos.pos;
+    const dest_dir = vec_sub(dest_p, cur_pos.pos);
+    new_pos.speed = vec_mul(dest_dir, 1/dest_t);
+  }
+
+  _applyDesiredState() {
+    let self = this;
+
+    const old_players = this.currentState['players'] !== undefined ? this.currentState['players'] : {};
+    const new_players = {};
+    const new_update_time = performance.now();
+
+    const lastP = Object.keys(this.desiredState.players)[Object.keys(this.desiredState.players).length - 1];
+    const p = this.desiredState.players[lastP].pos;
+    pos_arr.push([new_update_time, [p[0],p[1]]]);
 
     Object.entries(this.desiredState['players']).forEach(([id, playerPos]) => {
       new_players[id] = playerPos;
@@ -265,40 +432,11 @@ class GameState {
       const newDir = convDirection(playerPos['dir']);
 
       if (old_players[id] !== undefined) {
-        if (old_players[id]['desired_dir'] != newDir) {
-          new_players[id]['converted_dir'] = old_players[id]['converted_dir'];
-          new_players[id]['base_dir'] = old_players[id]['converted_dir'];
-          new_players[id]['desired_dir'] = newDir;
-          new_players[id]['dir_time'] = performance.now();
-        }
-        else {
-          new_players[id]['base_dir'] = old_players[id]['base_dir'];
-          new_players[id]['desired_dir'] = old_players[id]['desired_dir'];
-          new_players[id]['dir_time'] = old_players[id]['dir_time'];
-
-          const delta = performance.now() - new_players[id]['dir_time'];
-          const rot_delta = new_players[id]['desired_dir'] - new_players[id]['base_dir'];
-          var rot_dir;
-          if (rot_delta <= -pi || (0 <= rot_delta && rot_delta < pi)) {
-            rot_dir = 1;
-          }
-          else {
-            rot_dir = -1;
-          }
-
-          const abs_delta = Math.abs(rot_delta);
-          const real_rot_delta = abs_delta >= pi ? (2*pi - abs_delta) : abs_delta;
-
-          if (delta * rot_speed > real_rot_delta) {
-            new_players[id]['converted_dir'] = old_players[id]['desired_dir'];
-          }
-          else {
-            new_players[id]['converted_dir'] = old_players[id]['base_dir'] + rot_dir * 
-              delta * rot_speed;
-          }
-        }
+        self._interpolateRotation(old_players[id], new_players[id]);
+        self._interpolatePosition(old_players[id], new_players[id], new_update_time - this.currentState['update_time']);
       }
       else {
+        const newDir = convDirection(playerPos['dir']);
         new_players[id]['converted_dir'] = newDir;
         new_players[id]['desired_dir'] = newDir;
         new_players[id]['base_dir'] = newDir;
@@ -306,55 +444,46 @@ class GameState {
       }
     });
 
+    this.currentState['update_time'] = new_update_time;
     this.currentState['players'] = new_players;
+    this.currentState['lostObjects'] = this.desiredState['lostObjects'];
+
+    self._showLostObjects(this.currentState['lostObjects']);
   }
 }
 
-function makeRoadTile(tile) {
-  const edge_count = (tile['u'] ? 1 : 0) + (tile['r'] ? 1 : 0) + (tile['d'] ? 1 : 0) + (tile['l'] ? 1 : 0);
-  let top;
-  let rot;
-  switch(edge_count) {
-    case 0: top = roadEdge; rot = 0; break;
-    case 1: 
-      pos = (tile['r'] ? 1 : 0) + (tile['d'] ? 2 : 0) + (tile['l'] ? 3 : 0);
-      top = loadedTiles['t']; 
-      rot = pos * 90; 
-      break;
-    case 2:
-      if (tile['r'] && tile['l']) {
-        top = loadedTiles['v']; 
-        rot = 90; 
-      }
-      else if (tile['u'] && tile['d']) {
-        top = loadedTiles['v']; 
-        rot = 0; 
-      }
-      else {
-        pos = (tile['r'] && tile['d'] ? 3 : 0) + (tile['d'] && tile['l'] ? 2 : 0) + (tile['l'] && tile['u'] ? 1 : 0);
-        top = loadedTiles['tr']; 
-        rot = pos * 90; 
-      }
-      break;
-    case 3:
-      pos = (!tile['r'] ? 1 : 0) + (!tile['d'] ? 2 : 0) + (!tile['l'] ? 3 : 0);
-      top = loadedTiles['nt']; 
-      rot = pos * 90; 
-      break;
-    case 4:
-      top = loadedTiles['vh']; 
-      rot = 0;
-      break;
-  }
-  const materials = [ roadEdge, roadEdge, top, roadEdge, roadEdge, roadEdge ];
+function makeRoadEdge(idx, val) {
+  // l t r b
+  const short_pts = [[0.05, 0.95], [0.05, 0.05], [0.95, 0.05], [0.95, 0.95]];
+  const long_pts = [[0.05, 0.55], [0.45, 0.05], [0.95, 0.45], [0.55, 0.95]];
 
-  const geo = new THREE.BoxBufferGeometry(1, roadH, 1);
-  const mesh = new THREE.Mesh(geo, materials);
-  mesh.rotation.y = rot / 360 * 2 * Math.PI;
-  mesh.receiveShadow = true;
+  const h = idx % 2 == 0 ? 0.1 : (val ? 0.1 : 0.9);
+  const w = idx % 2 != 0 ? 0.1 : (val ? 0.1 : 0.9);
 
-  return mesh;
+  const g_l = new THREE.BoxGeometry( h, roadH + 0.01, w );
+  const mesh_l = new THREE.Mesh( g_l, roadEdgeMaterial );
+  mesh_l.position.set( val ? short_pts[idx][0] : long_pts[idx][0], roadH/2. + 0.005, val ? short_pts[idx][1] : long_pts[idx][1] );
+
+  return mesh_l;
 }
+
+function makeRoadTile2(tile) {
+  const geometry = new THREE.BoxGeometry( 1, roadH, 1 );
+  const mesh = new THREE.Mesh( geometry, roadMaterial );
+  mesh.position.set( 0.5, roadH/2., 0.5 );
+
+  const group = new THREE.Object3D();
+  group.add(mesh);
+  group.add(makeRoadEdge(0, tile['l']));
+  group.add(makeRoadEdge(1, tile['u']));
+  group.add(makeRoadEdge(2, tile['r']));
+  group.add(makeRoadEdge(3, tile['d']));
+
+  return group;
+}
+
+const roadMaterial = new THREE.MeshBasicMaterial( { color: 0x5f5f5f } );
+const roadEdgeMaterial = new THREE.MeshBasicMaterial( { color: 0xe6e6e6 } );
 
 function makeRoads(scene) {
   for(y = ymin; y<=ymax;++y) {
@@ -362,8 +491,8 @@ function makeRoads(scene) {
       const tile = map_tiles[y-ymin][x-xmin];
       if (!tile['road']) continue;
 
-      const mesh = makeRoadTile(tile); ;//new THREE.Mesh(geo, mat);
-      mesh.position.set(x+.5, roadH/2., y+.5);
+      const mesh = makeRoadTile2(tile);
+      mesh.position.set(x, 0, y);
       scene.add(mesh);
     }
   }
@@ -389,7 +518,7 @@ function loadActor(/*, x, y*/then) {
   const fbxLoader = new THREE.FBXLoader();
   fbxLoader.load('assets/pug.fbx', (fbx) => {
       then(fbx);
-  });   
+  });
 }
 
 function getRandomInt(max) {
@@ -413,14 +542,14 @@ function addActor(scene) {
   actor.object.scale.set(scale, scale, scale);
 
   animate(actor);
-  paint(actor, getRandomColor(127)); // 0x442233
+  paint(actor.object, getRandomColor(127)); // 0x442233
 
   scene.add(actor.object);
   return actor;
 }
 
 function moveCameraTo(x, y) {
-  camera.position.set(x + 6.7, 8.5, y + 6.7);
+  camera.position.set(x + 0, 15, y + 5);
 }
 
 function moveActor(actor, x, y, dir) {
@@ -440,7 +569,7 @@ function setAnimation(actor, moving) {
 }
 
 function isReady() {
-  if (loadedActor===undefined) return false;
+  if (loadedActor===undefined || !lootTypesLoaded) return false;
 
   return true;
 }
@@ -463,7 +592,7 @@ function paint(model, color) {
     reflectivity: 0.8,
     shininess: 20,} );
 
-  model.object.traverse( function ( child ) {
+  model.traverse( function ( child ) {
     if ( child.isMesh ) {
       child.castShadow = true;
       //child.receiveShadow = true;
@@ -513,6 +642,10 @@ function gameserverMain() {
     loadedActor = object;
   });
 
+  loadLootTypes(function(){
+
+  });
+
   const basementH = 0.5;
   const fov = 45;
   const aspect = 2;  // the canvas default
@@ -520,11 +653,11 @@ function gameserverMain() {
   const far = 2000;
   camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(0, 10, 20);
-  camera.rotation.set(-0.825, 0.574, 0.531);
+  camera.rotation.set(-0.8 * Math.PI/2,0,0);
 
-  //const controls = new THREE.OrbitControls(camera, canvas);
-  //controls.target.set(0, 5, 0);
-  //controls.update();
+  /*const controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.set(0, 5, 0);
+  controls.update();*/
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#DEFEFF');
@@ -611,7 +744,7 @@ function gameserverMain() {
     }
 
     for (m of mixers) 
-      m.update(delta);
+      m.update(delta * 2);
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);

@@ -21,8 +21,11 @@ add_executable(game_server
 	src/core/http_server.h
 	src/model/model.h
 	src/model/model.cpp
+	src/model/loot_generator.h
+	src/model/loot_generator.cpp
 	src/json/json_loader.h
 	src/json/json_loader.cpp
+	src/json/json_loot_types_storage.h
 	src/handlers/request_handler.cpp
 	src/handlers/request_handler.h
 	src/handlers/api_handler.h
@@ -60,6 +63,7 @@ target_include_directories(game_server PRIVATE
 	CONAN_PKG::boost
 	src
 )
+
 set(CMAKE_BUILD_TYPE Debug)
 
 add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)

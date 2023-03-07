@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "util/utils.h"
+
 namespace model {
 
 using namespace std::literals;
@@ -21,6 +23,16 @@ void Map::AddOffice(Office office) {
     }
 }
 
+void Map::GenerateThings(size_t delta_time, size_t dogs_count) const {
+    lost_things_.AddLostThings(dog_map_.GetRoadMap(), 
+                                std::chrono::milliseconds(delta_time),
+                                dogs_count);
+}
+
+void Map::SetTypesCount(size_t count) {
+    lost_things_.SetItemTypesCount(count);
+}
+
 void Game::AddMap(Map map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
@@ -33,6 +45,10 @@ void Game::AddMap(Map map) {
             throw std::invalid_argument("Can't emplace map!");
         }
     }
+}
+
+void LostThings::SetItemTypesCount(size_t count) noexcept {
+    items_types_count_ = count;
 }
 
 bool operator ==(const Point& a, const Point& b){
@@ -84,5 +100,22 @@ void RoadMap::InsertRoad(Road& road){
     RoadMap_.push_back(road);
 }
 
+void LostThings::AddLostThings(const std::vector<Road> &roads, 
+                                      std::chrono::milliseconds delta, 
+                                      size_t dogs_count) {
+    size_t items_to_add = generator_.Generate(delta, GetThingsCount(), dogs_count);
+    
+    for (int i = 0; i < items_to_add; ++i) {
+        AddThing(roads);
+    }
+}
 
+void LostThings::AddThing(const std::vector<Road> &roads) {
+    Road road = roads[util::GetRandomNumber(0, roads.size())];
+    double x = util::GetRandomDoubleNumber(road.GetStart().x - 0.4, road.GetEnd().x + 0.4);
+    double y = util::GetRandomDoubleNumber(road.GetStart().y - 0.4, road.GetEnd().y + 0.4);
+    int type = util::GetRandomNumber(0, items_types_count_-1);
+
+    lost_things_.emplace(type, std::make_pair(x,y));
+}
 }  // namespace model

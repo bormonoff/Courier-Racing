@@ -1,16 +1,18 @@
 #include "json_loader.h"
+
+#include "json/json_loader.h"
 #include "util/literals_storage.h"
 
 namespace json_loader {
 
 using namespace http_handler;
 
-model::Game LoadGame(const std::filesystem::path& json_path) {
+void LoadGame(const std::filesystem::path& json_path, model::Game& game, 
+              json_loot::LootTypes& loot_storage) {
     boost::json::value file_json{};
     ParseFile(json_path, file_json);
-    model::Game game;
     CreateGame(file_json, game);
-    return game;
+    GenerateLootTypes(file_json, loot_storage);
 }
 
 void ParseFile(const std::filesystem::path& json_path, boost::json::value& file_json) {
@@ -32,12 +34,25 @@ void CreateGame(boost::json::value& file_json, model::Game& game) {
         std::string mapID = static_cast<std::string>(maps.at(ID).as_string());
         std::string name = static_cast<std::string>(maps.at(NAME).as_string());
         double speed = GetDogSpeed(file_json, maps);
+        size_t period 
+            = std::stoi(json::serialize(file_json.at("lootGeneratorConfig").at("period")));
+        double probability 
+            = std::stod(json::serialize(file_json.at("lootGeneratorConfig").at("probability")));
 
-        model::Map map_for_add(util::Tagged<std::string, model::Map>(mapID), name, speed);
+        model::Map map_for_add(util::Tagged<std::string, model::Map>(mapID), name, 
+                               speed, period, probability);
         ReadRoadsIntoMap(maps, map_for_add);    
         ReadOfficesIntoMap(maps, map_for_add);
         ReadBuildingsIntoMap(maps, map_for_add);
+        ReadObjectCount(maps, map_for_add);
         game.AddMap(map_for_add);
+    }
+}
+
+void GenerateLootTypes(boost::json::value& file_json, json_loot::LootTypes& loot_storage) {
+    for (const auto& maps : file_json.at(MAPS).as_array()) {
+        std::string mapID = static_cast<std::string>(maps.at(ID).as_string());
+        loot_storage.loot_types_[mapID] = maps.at(LOOTTYPES);
     }
 }
 
@@ -47,6 +62,14 @@ double GetDogSpeed(boost::json::value& file_json, const json::value& maps) {
         speed = maps.at(DOGSPEED).as_double();
     } catch(std::exception& ex) {}
     return speed;
+}
+
+void ReadObjectCount(const json::value& maps, model::Map& map_for_add) {
+    size_t itemCount = 0;
+    for (const auto& items : maps.at(LOOTTYPES).as_array()) {
+        ++itemCount; 
+    }
+    map_for_add.SetTypesCount(itemCount);
 }
 
 void ReadRoadsIntoMap(const json::value& maps, model::Map& map_for_add) {

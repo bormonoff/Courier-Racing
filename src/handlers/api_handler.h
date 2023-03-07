@@ -10,8 +10,9 @@ using Request = http::request<http::string_body>;
 
 class ApiHandler{
 public:
-    explicit ApiHandler(model::Game& game, Strand& strand, size_t period, bool random_spawn)
-        : scenarios_{game, strand, period, random_spawn}{
+    explicit ApiHandler(model::Game& game, Strand& strand, size_t period, bool random_spawn,
+                        json_loot::LootTypes&& loot_types)
+        : scenarios_{game, strand, period, random_spawn, std::move(loot_types)}{
     }
 
     ApiHandler(const ApiHandler&) = delete;

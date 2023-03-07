@@ -33,7 +33,7 @@ Response ApiHandler::MakeResponse(const Request& req,
                 const auto this_map = scenarios_.GetGame().FindMap(
                     util::Tagged<std::string, model::Map>(parseURL[3]));
                 if (this_map != nullptr) {
-                    return ReturnMap(this_map, req);
+                    return scenarios_.ReturnMap(this_map, req);
                 }else{
                     return NotFound(req);
                 }

@@ -38,15 +38,18 @@ int main(int argc, char* argv[]) {
 
         boost_log::InitBoostLog();
 
-        model::Game game = json_loader::LoadGame(args.config);
-
+        json_loot::LootTypes loot_types;
+        model::Game game;
+        json_loader::LoadGame(args.config, game, loot_types);
+        
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
 
         auto handler = std::make_shared<http_handler::RequestHandler>(ioc, game, 
                                                                       args.root, 
                                                                       args.milliseconds, 
-                                                                      args.random_spawn);
+                                                                      args.random_spawn,
+                                                                      std::move(loot_types));
         http_handler::RequestLoggerHandler logger_handler{std::move(handler)};
 
         net::signal_set signals(ioc, SIGINT, SIGTERM);

@@ -7,8 +7,9 @@
 
 #include "boost/json.hpp"
 
-#include "handlers/api_response_storage.h"
 #include "core/http_server.h"
+#include "handlers/api_response_storage.h"
+#include "json/json_loot_types_storage.h"
 #include "model/model.h"
 #include "time/ticker.h"
 
@@ -26,11 +27,13 @@ using Request = http::request<http::string_body>;
 class Application {
 public:
     explicit Application(model::Game& game, Strand& strand, 
-                         size_t period, bool random_spawn)
+                         size_t period, bool random_spawn, 
+                         json_loot::LootTypes&& loot_types)
         : game_{game},
           strand_{strand},
           period_{std::chrono::milliseconds(period)},
-          random_spawn_{random_spawn} {
+          random_spawn_{random_spawn},
+          loot_{std::move(loot_types)} {
         if(period){
             ticker_ = std::make_shared<time_control::Ticker>(
                 strand_, 
@@ -54,10 +57,12 @@ public:
     Response ReturnMapsArray(const Request& req);
     Response ChangeSpeed(const Request& req);
     Response ChangeDirectory(const Request& req, game_session::Player& player);
+    Response ReturnMap(const model::Map* const this_map, const Request& req);
     std::optional<game_session::Player> FindPlayerViaToken(std::string& token);
     std::optional<game_session::GameSession> FindSessionViaToken(std::string& token);
     void UpdateState(size_t milliseconds);
 
+    json_loot::LootTypes loot_;
 private:
     bool random_spawn_;
     model::Game& game_;

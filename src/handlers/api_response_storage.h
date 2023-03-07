@@ -14,6 +14,8 @@ namespace json = boost::json;
 using Response = http::response<http::string_body>;
 using Request = http::request<http::string_body>;
 
+void FormPlayersJSON(const game_session::GameSession& session, json::object& ID);
+void FormItemsJSON(const game_session::GameSession& session, json::object& lost_objects);
 Response FindAllPlayerStatesOnMap(const Request& req, 
                                   const game_session::GameSession& session);
 Response FindAllPlayersOnMap(const Request& req,

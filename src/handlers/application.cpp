@@ -5,7 +5,26 @@ namespace http_handler {
 void Application::UpdateState(size_t milliseconds) {
     for (auto& it : sessions_) {
         it.second.MakeOffset(milliseconds);
+        it.second.GenerateThingsOnMap(milliseconds);
     }
+}
+
+Response Application::ReturnMap(const model::Map* const this_map, const Request& req) {
+    json::object map;
+        map[ID] = *this_map->GetId();
+        map[NAME] = this_map->GetName();
+    
+    map[ROADS] = ReturnRoads(this_map);
+    map[BUILDINGS] = ReturnBuildings(this_map);   
+    map[OFFICES] = ReturnOffices(this_map);
+    map[LOOTTYPES] = loot_.loot_types_[*this_map->GetId()];
+
+    http::response<http::string_body> response{http::status::ok, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.body() = json::serialize(map);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+    response.content_length(response.body().size());
+    return response;
 }
 
 Response Application::MoveDogs(const Request& req) {

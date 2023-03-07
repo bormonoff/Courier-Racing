@@ -16,4 +16,13 @@ size_t GetRandomNumber(const int min, const int max) {
     // std::cout<<sizeof(distribution)<<" bytes - distr"<<std::endl;
     return distribution(generator);
 }
+
+// Not a template cause we have real distribution instead
+// If there would be int distribution for doubles - UB
+double GetRandomDoubleNumber(const double min, const double max) {
+    static std::random_device rand{};
+    static std::mt19937_64 generator(rand());
+    std::uniform_real_distribution<double> distribution{min, max};
+    return distribution(generator);
+}
 }  // namespace util

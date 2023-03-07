@@ -34,7 +34,20 @@ Response FindAllPlayerStatesOnMap(const Request& req,
     
     json::object json_res;
     json::object ID;
-    for (auto it : session.GetPlayerTokens().GetPlayers()) {
+    FormPlayersJSON(session, ID);
+    json_res[PLAYERS] = ID;
+
+    json::object lost_objects;
+    FormItemsJSON(session, lost_objects);
+    json_res[LOSTOBJECTS] = lost_objects;
+
+    response.body() = json::serialize(json_res);
+    response.content_length(response.body().size());
+    return response;
+}
+
+void FormPlayersJSON(const game_session::GameSession& session, json::object& ID) {
+    for (auto& it : session.GetPlayerTokens().GetPlayers()) {
         json::object data;
         json::array position;
         position.push_back(it.second.GetDogStart().x);
@@ -49,10 +62,22 @@ Response FindAllPlayerStatesOnMap(const Request& req,
         data[DIRECTION] = it.second.GetDogDirection();
         ID[std::to_string(it.second.GetDogID())] = data;
     }
-    json_res[PLAYERS] = ID;
-    response.body() = json::serialize(json_res);
-    response.content_length(response.body().size());
-    return response;
+}
+
+void FormItemsJSON(const game_session::GameSession& session, json::object& lost_objects) {
+    size_t index {0};
+    for (auto& it : session.GetMap().GetLostThings()) {
+        json::object data;
+        data[TYPE] = it.first;
+
+        json::array position;
+        position.push_back(it.second.first);
+        position.push_back(it.second.second);
+        data[POSITION] = position;
+
+        lost_objects[std::to_string(index)] = data;
+        ++index;
+    }
 }
 
 Response FindAllPlayersOnMap(const Request& req, 
@@ -190,23 +215,6 @@ Response TickFail(const Request& req) {
     json_res[CODE] = BAD_REQUEST_CODE;
     json_res[MESSAGE] = INVALID_ENDPOINT_MESSAGE;
     response.body() = json::serialize(json_res);
-    response.content_length(response.body().size());
-    return response;
-}
-
-Response ReturnMap(const model::Map* const this_map, const Request& req) {
-    json::object map;
-        map[ID] = *this_map->GetId();
-        map[NAME] = this_map->GetName();
-
-    map[ROADS] = ReturnRoads(this_map);
-    map[BUILDINGS] = ReturnBuildings(this_map);   
-    map[OFFICES] = ReturnOffices(this_map);
-
-    http::response<http::string_body> response{http::status::ok, req.version()};
-    response.set(http::field::content_type, ContentType::TYPE_JSON);
-    response.body() = json::serialize(map);
-    response.set(http::field::cache_control, ContentType::NO_CACHE);
     response.content_length(response.body().size());
     return response;
 }

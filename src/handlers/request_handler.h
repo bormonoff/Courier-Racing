@@ -19,9 +19,10 @@ public:
 
     explicit RequestHandler(net::io_context& ioc, model::Game& game, 
                             const std::filesystem::path& path_to_content, 
-                            size_t period, bool random_spawn)
+                            size_t period, bool random_spawn, 
+                            json_loot::LootTypes&& loot_types)
         : strand_{net::make_strand(ioc)},
-          api_handler_{game, strand_, period, random_spawn},
+          api_handler_{game, strand_, period, random_spawn, std::move(loot_types)},
           path_to_content_{path_to_content} {}
 
     RequestHandler(const RequestHandler&) = delete;
