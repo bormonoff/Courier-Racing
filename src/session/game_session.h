@@ -37,5 +37,6 @@ private:
     const model::Map& session_map_;
     std::deque<Dog> dogs_;
     PlayerTokens players_;
+    size_t dogID_ {0};
 };
 }  // namespace game_session

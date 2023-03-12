@@ -21,10 +21,9 @@ enum Direction {
 
 class Dog {
 public:
-    Dog(std::string name, Coordinate start, double speed)
+    Dog(std::string name, size_t id, Coordinate start, double speed)
         :name_{name}, coordinate_{start}, default_speed{speed} {
-            id_ = count;
-            count++;
+            id_ = id;
             speed_.dx = 0;
             speed_.dy = 0;
             direction_ = Direction::UP;
