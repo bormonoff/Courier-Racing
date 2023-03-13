@@ -14,15 +14,24 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-add_executable(game_server
-	src/main.cpp
-	src/sdk.h
-	src/core/http_server.cpp
-	src/core/http_server.h
+add_library(GameLib STATIC 
 	src/model/model.h
 	src/model/model.cpp
 	src/model/loot_generator.h
 	src/model/loot_generator.cpp
+	src/model/collision_detector.h
+	src/model/collision_detector.cpp
+	src/util/utils.h
+	src/util/utils.cpp
+)
+
+target_include_directories(GameLib PUBLIC src)
+
+add_executable(game_server 
+	src/main.cpp
+	src/sdk.h
+	src/core/http_server.cpp
+	src/core/http_server.h
 	src/json/json_loader.h
 	src/json/json_loader.cpp
 	src/json/json_loot_types_storage.h
@@ -47,8 +56,6 @@ add_executable(game_server
 	src/loggers/boost_log.h
 	src/loggers/boost_response.h
 	src/loggers/boost_response.cpp
-	src/util/utils.h
-	src/util/utils.cpp
 	src/util/tagged.h
 	src/util/boost_json.cpp
 	src/util/literals_storage.h
@@ -57,12 +64,21 @@ add_executable(game_server
 	src/commands/options.h
 	src/commands/options.cpp
 )
-
-target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost)
-target_include_directories(game_server PRIVATE 
-	CONAN_PKG::boost
-	src
+add_executable(test_model 
+	tests/model-tests.cpp
 )
+
+add_executable(test_loot_generator 
+	tests/loot-generator_tests.cpp
+)
+
+target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib)
+target_link_libraries(test_loot_generator PRIVATE CONAN_PKG::catch2 GameLib)
+target_link_libraries(test_model PRIVATE CONAN_PKG::catch2 GameLib)
+
+target_include_directories(game_server PRIVATE CONAN_PKG::boost	src)
+target_include_directories(test_loot_generator PRIVATE src)
+target_include_directories(test_model PRIVATE src)
 
 set(CMAKE_BUILD_TYPE Debug)
 
