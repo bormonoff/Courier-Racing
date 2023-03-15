@@ -14,6 +14,10 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+set(CMAKE_BUILD_TYPE Debug)
+
+add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
+
 add_library(GameLib STATIC 
 	src/model/model.h
 	src/model/model.cpp
@@ -65,22 +69,31 @@ add_executable(game_server
 	src/commands/options.cpp
 )
 add_executable(test_model 
-	tests/model-tests.cpp
+	tests/model_tests.cpp
 )
 
 add_executable(test_loot_generator 
-	tests/loot-generator_tests.cpp
+	tests/loot_generator_tests.cpp
+)
+
+add_executable(test_collision_detector
+	tests/collision_detector_tests.cpp
 )
 
 target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib)
 target_link_libraries(test_loot_generator PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_model PRIVATE CONAN_PKG::catch2 GameLib)
+target_link_libraries(test_collision_detector PRIVATE CONAN_PKG::catch2 GameLib)
 
 target_include_directories(game_server PRIVATE CONAN_PKG::boost	src)
 target_include_directories(test_loot_generator PRIVATE src)
 target_include_directories(test_model PRIVATE src)
+target_include_directories(test_collision_detector PRIVATE src)
 
-set(CMAKE_BUILD_TYPE Debug)
 
-add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
+include(CTest)
+include(${CONAN_BUILD_DIRS_CATCH2}/Catch.cmake) 
 
+catch_discover_tests(test_model) 
+catch_discover_tests(test_loot_generator) 
+catch_discover_tests(test_collision_detector) 
