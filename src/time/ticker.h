@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <mutex>
 
 #include "core/http_server.h"
 
@@ -25,6 +26,7 @@ private:
     void ScheduleTick();    
     void OnTick(sys::error_code ec);
 
+    std::mutex mutex;
     Strand strand_;
     net::steady_timer timer_{strand_};
     std::chrono::milliseconds period_;

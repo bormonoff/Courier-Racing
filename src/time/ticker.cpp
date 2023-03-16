@@ -20,7 +20,9 @@ void Ticker::OnTick(sys::error_code ec) {
         std::chrono::steady_clock::now();
     std::chrono::milliseconds duration = 
         std::chrono::duration_cast<std::chrono::milliseconds>(current_tick - last_tick_);
+    mutex.lock();
     handler_(duration.count());
+    mutex.unlock();
     last_tick_ = current_tick;
     ScheduleTick();
 }

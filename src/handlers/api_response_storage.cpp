@@ -60,23 +60,31 @@ void FormPlayersJSON(const game_session::GameSession& session, json::object& ID)
         data[SPEED] = speed;
 
         data[DIRECTION] = it.second.GetDogDirection();
+
+        json::array bag;
+        for (auto& items : it.second.GetDog().GetItemsInBag()) {
+            json::object bag_data;
+            bag_data["id"] = items.ID;
+            bag_data["type"] = items.type;
+            bag.push_back(bag_data);
+        }
+        data["bag"] = bag;
+        
         ID[std::to_string(it.second.GetDogID())] = data;
     }
 }
 
 void FormItemsJSON(const game_session::GameSession& session, json::object& lost_objects) {
-    size_t index {0};
     for (auto& it : session.GetMap().GetLostThings()) {
         json::object data;
-        data[TYPE] = it.first;
+        data[TYPE] = it.second.type;
 
         json::array position;
-        position.push_back(it.second.first);
-        position.push_back(it.second.second);
+        position.push_back(it.second.x);
+        position.push_back(it.second.y);
         data[POSITION] = position;
 
-        lost_objects[std::to_string(index)] = data;
-        ++index;
+        lost_objects[std::to_string(it.first)] = data;
     }
 }
 
@@ -100,7 +108,7 @@ Response FindAllPlayersOnMap(const Request& req,
 }
 
 Response MethodNotAllowed(const Request& req) {
-    Response response{http::status::bad_request, req.version()};
+    Response response{http::status::method_not_allowed, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     response.set(http::field::allow, Allow::GETANDHEAD);

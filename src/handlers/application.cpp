@@ -4,12 +4,47 @@ namespace http_handler {
 
 void Application::UpdateState(size_t milliseconds) {
     for (auto& it : sessions_) {
-        it.second.MakeOffset(milliseconds);
+        DetectData collision_collector;
+        it.second.MakeOffset(milliseconds, collision_collector);
+
+        DetectData items_collision_collector {collision_collector};
         it.second.GenerateThingsOnMap(milliseconds);
+        it.second.AddItemsToCollisionDetector(items_collision_collector);
+        UpdateItemCollisions(items_collision_collector, it.second);
+
+        DetectData base_collision_collector {std::move(collision_collector)};
+        it.second.AddOfficesToCollisionDetector(base_collision_collector);
+        UpdateOfficeCollisions(base_collision_collector, it.second);
+    }
+}
+
+void Application::UpdateItemCollisions(DetectData& item_data, 
+                                       game_session::GameSession& session) {
+    auto item_events = collision_detector::FindGatherEvents(item_data);
+    for (auto& event : item_events) {
+        game_session::Dog& dog = session.FingDogByIndex(event.gatherer_id);
+        if (dog.GetItemCount() <= session.GetMap().GetMaxBagSize()) {
+            dog.CollectItem(session.GetMap().GetLostThingViaIndex(event.item_id));
+            session.RemoveItemViaIndex(event.item_id);
+        }
+    }
+}
+
+void Application::UpdateOfficeCollisions(DetectData& office_data, 
+                                         game_session::GameSession& session) {
+    auto office_events = collision_detector::FindGatherEvents(office_data);
+    for (auto& event : office_events) {
+        game_session::Dog& dog = session.FingDogByIndex(event.gatherer_id);
+        if (dog.GetItemCount() <= session.GetMap().GetMaxBagSize()) {
+            dog.ClearBag();
+        }
     }
 }
 
 Response Application::ReturnMap(const model::Map* const this_map, const Request& req) {
+    if (req.method_string() != Allow::GET && req.method_string() != Allow::HEAD) {
+        return MethodNotAllowed(req);
+    }
     json::object map;
         map[ID] = *this_map->GetId();
         map[NAME] = this_map->GetName();
@@ -98,8 +133,8 @@ Response Application::ChangeDirectory(const Request& req,
 }
 
 Response Application::GetState(const Request& req) {
-    if (req.method_string() != Allow::GET) {
-        return MethodGETAllowed(req);
+    if (req.method_string() != Allow::GET && req.method_string() != Allow::HEAD) {
+        return MethodNotAllowed(req);
     }
     std::string token;
     try {

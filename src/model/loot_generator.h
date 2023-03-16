@@ -16,7 +16,8 @@ public:
           random_generator_{std::move(random_gen)} {
     }
 
-    unsigned Generate(TimeInterval time_delta, unsigned loot_count, unsigned looter_count);
+    unsigned Generate(TimeInterval time_delta, unsigned loot_count, 
+                      unsigned looter_count);
 
 private:
     static double DefaultGenerator() noexcept {

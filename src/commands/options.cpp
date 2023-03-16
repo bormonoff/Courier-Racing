@@ -16,7 +16,7 @@ Args ParseCommandLine(int argc, const char* const argv[]) {
         ("www-root,w", po::value(&args.root)->value_name("dir"), 
          "set static files root")
         ("tick-period,t", po::value(&args.milliseconds)->value_name("milliseconds"),
-         "set config file path")
+         "set tick period")
         ("randomize-spawn-points,r",
          "spawn dogs at random positions");
 

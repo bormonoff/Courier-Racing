@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+#include "model/model.h"
 
 namespace game_session{
 
@@ -21,17 +24,17 @@ enum Direction {
 
 class Dog {
 public:
+    using Items = std::vector<model::Item>;
+
     Dog(std::string name, size_t id, Coordinate start, double speed)
         :name_{name}, coordinate_{start}, default_speed{speed} {
             id_ = id;
-            speed_.dx = 0;
+            speed_.dx = 0; 
             speed_.dy = 0;
             direction_ = Direction::UP;
     }
 
-    
-
-    const uint16_t& GetID() const {
+    const size_t& GetID() const {
         return id_;
     }
 
@@ -47,22 +50,34 @@ public:
         return speed_;
     }
 
+    const Items&  GetItemsInBag() const {
+        return items_in_bag_;
+    }
+
+    const size_t GetItemCount() const {
+        return items_in_bag_.size();
+    }
+
     void SetSpeed(std::string&& drection);
     void MoveDog(Coordinate& target);
     void SetCoordX(double x);
     void SetCoordY(double y);
+    void CollectItem(model::Item item);
+    void ClearBag();
+
     const std::string GetDirection() const;   
     Coordinate TargetPosition(size_t& time);
 
 private:
     std::string name_;
-    uint16_t id_;
-    static uint32_t count;
+    size_t id_;
+    static size_t count;
     const double default_speed;
 
     Coordinate coordinate_;
     Speed speed_;
-    uint8_t direction_;
+    size_t direction_;
+    Items items_in_bag_;
 };
 
 }  // namespace game_session

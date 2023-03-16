@@ -4,7 +4,7 @@
 
 namespace game_session{
 
-uint32_t Dog::count = 0;
+size_t Dog::count = 0;
 
 const std::string Dog::GetDirection() const {
     switch (direction_){
@@ -59,6 +59,14 @@ Coordinate Dog::TargetPosition(size_t& time) {
 
 void Dog::SetCoordY(double y) {
     coordinate_.y = y;
+}
+
+void Dog::CollectItem(model::Item item) {
+    items_in_bag_.push_back(item);
+}
+
+void Dog::ClearBag() {
+    items_in_bag_.clear();
 }
 
 void Dog::SetCoordX(double x) {

@@ -34,13 +34,14 @@ void CreateGame(boost::json::value& file_json, model::Game& game) {
         std::string mapID = static_cast<std::string>(maps.at(ID).as_string());
         std::string name = static_cast<std::string>(maps.at(NAME).as_string());
         double speed = GetDogSpeed(file_json, maps);
+        size_t bag_capacity = GetDogBagSize(file_json, maps);
         size_t period 
             = std::stoi(json::serialize(file_json.at("lootGeneratorConfig").at("period")));
         double probability 
             = std::stod(json::serialize(file_json.at("lootGeneratorConfig").at("probability")));
 
         model::Map map_for_add(util::Tagged<std::string, model::Map>(mapID), name, 
-                               speed, period, probability);
+                               speed, period, bag_capacity, probability);
         ReadRoadsIntoMap(maps, map_for_add);    
         ReadOfficesIntoMap(maps, map_for_add);
         ReadBuildingsIntoMap(maps, map_for_add);
@@ -62,6 +63,18 @@ double GetDogSpeed(boost::json::value& file_json, const json::value& maps) {
         speed = maps.at(DOGSPEED).as_double();
     } catch(std::exception& ex) {}
     return speed;
+}
+
+size_t GetDogBagSize(boost::json::value& file_json, const json::value& maps) {
+    size_t bag_capacity = 3;
+
+    try {
+        bag_capacity = file_json.at("defaultBagCapacity").as_int64();
+    } catch(std::exception& ex) {}
+    try {
+        bag_capacity = maps.at("bagCapacity").as_int64();
+    } catch(std::exception& ex) {}
+    return bag_capacity;
 }
 
 void ReadObjectCount(const json::value& maps, model::Map& map_for_add) {

@@ -33,6 +33,19 @@ void Map::SetTypesCount(size_t count) {
     lost_things_.SetItemTypesCount(count);
 }
 
+void Map::AddRoad(const Road& road) {
+    roads_.emplace_back(road);
+    dog_map_.AddRoad(road);
+}
+
+const Item Map::GetLostThingViaIndex(size_t index) const noexcept {
+    return lost_things_.GetLostThingViaIndex(index);
+}
+
+void Map::RemoveItemFromMap(size_t index) const {
+    lost_things_.RemoveItemViaIndex(index);
+}
+
 void Game::AddMap(Map map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
@@ -111,11 +124,19 @@ void LostThings::AddLostThings(const std::vector<Road> &roads,
 }
 
 void LostThings::AddThing(const std::vector<Road> &roads) {
-    Road road = roads[util::GetRandomNumber(0, roads.size())];
-    double x = util::GetRandomDoubleNumber(road.GetStart().x - 0.4, road.GetEnd().x + 0.4);
-    double y = util::GetRandomDoubleNumber(road.GetStart().y - 0.4, road.GetEnd().y + 0.4);
-    int type = util::GetRandomNumber(0, items_types_count_-1);
-
-    lost_things_.emplace(type, std::make_pair(x,y));
+    Road road = roads[util::GetRandomNumber(0, roads.size() - 1)];
+    double x = util::GetRandomDoubleNumber(road.GetStart().x - 0.4, 
+                                           road.GetEnd().x + 0.4);
+    double y = util::GetRandomDoubleNumber(road.GetStart().y - 0.4, 
+                                           road.GetEnd().y + 0.4);
+    size_t type = util::GetRandomNumber(0, items_types_count_-1);
+    
+    lost_things_[id_] = {x, y, type, id_};
+    id_++;
 }
+
+void LostThings::RemoveItemViaIndex(size_t index) {
+    lost_things_.erase(index);
+}
+
 }  // namespace model

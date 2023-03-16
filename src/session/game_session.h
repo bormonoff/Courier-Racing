@@ -2,14 +2,18 @@
 
 #include <deque>
 
+#include "model/collision_detector.h"
 #include "model/model.h"
 #include "session/dog.h"
 #include "session/player_token.h"
 #include "util/utils.h"
 
+#include <iostream>
+
 namespace game_session {
 
 using FindRoadOpt = std::pair<std::optional<model::Road>, std::optional<model::Road>>;
+using DetectData = collision_detector::ItemGathererProvider;
 
 class GameSession {
 public:
@@ -23,15 +27,19 @@ public:
     const model::Map& GetMap() const {
         return session_map_;
     }
-
-    const Player& AddDog(std::string name, bool randomize);
-    const std::optional<Player> FindPlayer(std::string& token);
-    bool TargetInsideRoad(const model::Road& road, Coordinate& target);
+    
+    void GenerateThingsOnMap(size_t time);
+    void RemoveItemViaIndex(size_t index);
+    void MakeOffset(size_t& time, DetectData& detector);
+    void AddItemsToCollisionDetector(DetectData& detector);
+    void AddOfficesToCollisionDetector(DetectData& detector);
+    bool TargetInsideRoad(const model::Road& road, Coordinate& target);  
+    Dog& FingDogByIndex(size_t index);
+    FindRoadOpt FindRoad(const std::vector<model::Road>& roads, Dog& dog) const;
     Coordinate& CalculateResult(const model::Road& road, Coordinate& target, 
                                 Dog& dog);
-    FindRoadOpt FindRoad(const std::vector<model::Road>& roads, Dog& dog) const;
-    void MakeOffset(size_t& time);
-    void GenerateThingsOnMap(size_t time);
+    const Player& AddDog(std::string name, bool randomize);
+    const std::optional<Player> FindPlayer(std::string& token);
     
 private:
     const model::Map& session_map_;

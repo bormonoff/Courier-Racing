@@ -13,7 +13,8 @@ unsigned LootGenerator::Generate(TimeInterval time_delta, unsigned loot_count,
     const double ratio 
         = std::chrono::duration<double>{time_without_loot_} / base_interval_;
     const double probability
-        = std::clamp((1.0 - std::pow(1.0 - probability_, ratio)) * random_generator_(), 0.0, 1.0);
+        = std::clamp((1.0 - std::pow(1.0 - probability_, ratio)) * random_generator_(),
+                      0.0, 1.0);
     const unsigned generated_loot 
         = static_cast<unsigned>(std::round(loot_shortage * probability));
     if (generated_loot > 0) {

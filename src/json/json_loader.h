@@ -23,4 +23,5 @@ void LoadGame(const std::filesystem::path& json_path, model::Game& game,
               json_loot::LootTypes& loot_storage);
 void GenerateLootTypes(boost::json::value& file_json, json_loot::LootTypes& loot_storage);
 double GetDogSpeed(boost::json::value& file_json, const json::value& maps);
+size_t GetDogBagSize(boost::json::value& file_json, const json::value& maps);
 }  // namespace json_loader

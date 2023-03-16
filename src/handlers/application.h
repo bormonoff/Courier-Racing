@@ -10,6 +10,7 @@
 #include "core/http_server.h"
 #include "handlers/api_response_storage.h"
 #include "json/json_loot_types_storage.h"
+#include "model/collision_detector.h"
 #include "model/model.h"
 #include "time/ticker.h"
 
@@ -23,6 +24,7 @@ namespace sys = boost::system;
 using Strand = net::strand<net::io_context::executor_type>;
 using Response = http::response<http::string_body>;
 using Request = http::request<http::string_body>;
+using DetectData = collision_detector::ItemGathererProvider;
 
 class Application {
 public:
@@ -61,6 +63,10 @@ public:
     std::optional<game_session::Player> FindPlayerViaToken(std::string& token);
     std::optional<game_session::GameSession> FindSessionViaToken(std::string& token);
     void UpdateState(size_t milliseconds);
+    void UpdateItemCollisions(DetectData& item_data, 
+                              game_session::GameSession& session);
+    void UpdateOfficeCollisions(DetectData& office_data, 
+                                game_session::GameSession& session);
 
     json_loot::LootTypes loot_;
 private:

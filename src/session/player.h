@@ -21,7 +21,7 @@ public:
         return dog_.GetName();
     }
 
-    const uint16_t& GetDogID() const {
+    const size_t& GetDogID() const {
         return dog_.GetID();
     }
 

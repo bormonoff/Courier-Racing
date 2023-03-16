@@ -129,15 +129,26 @@ private:
     Offset offset_;
 };
 
+struct Item {
+    double x;
+    double y;
+    size_t type;
+    size_t ID;
+};
+
 class LostThings {
 public:
-    using Things = std::unordered_map<int, std::pair<double, double>>;
+    using Things = std::unordered_map<size_t, Item>;
 
     explicit LostThings(size_t period, double probability) 
         : generator_{std::chrono::milliseconds(period), probability} {}
 
     const Things& GetLostThings() const noexcept {
         return lost_things_;
+    }
+
+    const Item GetLostThingViaIndex(size_t index) const noexcept {
+        return lost_things_.at(index);
     }
 
     const size_t GetThingsCount() const noexcept {
@@ -148,6 +159,7 @@ public:
         return items_types_count_;
     }
 
+    void RemoveItemViaIndex(size_t index);
     void SetItemTypesCount(size_t count) noexcept;
     void AddLostThings(const std::vector<Road> &roads, std::chrono::milliseconds delta, 
                        size_t dogs_count);
@@ -155,9 +167,10 @@ public:
 private:
     void AddThing(const std::vector<Road> &roads);
 
-    Things lost_things_;
+    mutable Things lost_things_;
     loot_gen::LootGenerator generator_;
-    size_t items_types_count_ {0};
+    size_t items_types_count_ {1};
+    size_t id_ {0};
 };
 
 class RoadMap {
@@ -182,12 +195,14 @@ public:
     using Roads = std::vector<Road>;
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
-    using Things = std::unordered_map<int, std::pair<double, double>>;
+    using Things = std::unordered_map<size_t, Item>;
 
-    explicit Map(Id id, std::string name, int64_t speed, size_t period, double probability) noexcept
+    explicit Map(Id id, std::string name, size_t speed, size_t period,
+                 size_t bag_capacity, double probability) noexcept
         : id_(std::move(id)),
           name_(std::move(name)),
           dog_speed_(speed), 
+          bag_capacity_ (bag_capacity),
           lost_things_{period, probability} {
     }
 
@@ -223,19 +238,21 @@ public:
         return dog_speed_;
     }
 
-    void AddRoad(const Road& road) {
-        roads_.emplace_back(road);
-        dog_map_.AddRoad(road);
+    size_t GetMaxBagSize() const noexcept {
+        return bag_capacity_;
     }
 
     void AddBuilding(const Building& building) {
         buildings_.emplace_back(building);
     }
 
+    void AddRoad(const Road& road);
     void AddOffice(Office office);
+    void RemoveItemFromMap(size_t index) const;
     void GenerateThings(size_t delta_time, size_t dogs_count) const;
     void SetTypesCount(size_t count);
-    
+    const Item GetLostThingViaIndex(size_t index) const noexcept;
+
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
@@ -243,12 +260,14 @@ private:
     std::string name_;
     Roads roads_;
     Buildings buildings_;
-    double dog_speed_;
-    mutable LostThings lost_things_;
-    
-    OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
     RoadMap dog_map_; 
+    mutable LostThings lost_things_;
+
+    double dog_speed_;
+    size_t bag_capacity_;
+
+    OfficeIdToIndex warehouse_id_to_index_;
 };
 
 class Game {
