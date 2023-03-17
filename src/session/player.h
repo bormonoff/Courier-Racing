@@ -4,7 +4,7 @@
 
 namespace game_session{
 
-class Player{
+class Player {
 public:
     Player(const std::string& token, Dog& dog)
         : dog_{dog}, token_{token} {};
@@ -35,6 +35,10 @@ public:
 
     const std::string GetDogDirection() const {
         return dog_.GetDirection();
+    }
+
+    const size_t GetDogScore() const {
+        return dog_.GetDogScore();
     }
 
     void SetDogSpeed(std::string&& direction);

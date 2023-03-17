@@ -46,6 +46,16 @@ void Map::RemoveItemFromMap(size_t index) const {
     lost_things_.RemoveItemViaIndex(index);
 }
 
+void Map::AddItemCost(size_t count) {
+    items_cost_.emplace_back(count);
+}
+
+#ifdef DEBUG
+void Map::GenerateDebugThings(double x, double y) const {
+    lost_things_.AddDebugLostThings(x, y);
+}
+#endif
+
 void Game::AddMap(Map map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
@@ -130,7 +140,6 @@ void LostThings::AddThing(const std::vector<Road> &roads) {
     double y = util::GetRandomDoubleNumber(road.GetStart().y - 0.4, 
                                            road.GetEnd().y + 0.4);
     size_t type = util::GetRandomNumber(0, items_types_count_-1);
-    
     lost_things_[id_] = {x, y, type, id_};
     id_++;
 }
@@ -139,4 +148,10 @@ void LostThings::RemoveItemViaIndex(size_t index) {
     lost_things_.erase(index);
 }
 
+#ifdef DEBUG
+void LostThings::AddDebugLostThings(double x, double y) {
+    lost_things_[id_] = {x, y, 0, id_};
+    id_++;
+}
+#endif
 }  // namespace model

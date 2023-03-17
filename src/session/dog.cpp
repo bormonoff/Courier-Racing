@@ -65,7 +65,10 @@ void Dog::CollectItem(model::Item item) {
     items_in_bag_.push_back(item);
 }
 
-void Dog::ClearBag() {
+void Dog::ClearBag(const model::Map& current_map) {
+    for (auto& it : items_in_bag_) {
+        scored_points_ += current_map.GetScoreArray().at(it.type);
+    }
     items_in_bag_.clear();
 }
 

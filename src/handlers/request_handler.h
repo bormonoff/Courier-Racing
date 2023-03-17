@@ -31,7 +31,6 @@ public:
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, 
                     Send&& send) {
-        std::string_view http_request = req.target();
         std::vector<std::string> parseURL{std::move(ReadURL(req))};
         if (parseURL[0] == "api") {
                       //TODO Handle usind Strand

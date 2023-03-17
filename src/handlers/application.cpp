@@ -22,7 +22,7 @@ void Application::UpdateItemCollisions(DetectData& item_data,
                                        game_session::GameSession& session) {
     auto item_events = collision_detector::FindGatherEvents(item_data);
     for (auto& event : item_events) {
-        game_session::Dog& dog = session.FingDogByIndex(event.gatherer_id);
+        game_session::Dog& dog = session.FindDogByIndex(event.gatherer_id);
         if (dog.GetItemCount() <= session.GetMap().GetMaxBagSize()) {
             dog.CollectItem(session.GetMap().GetLostThingViaIndex(event.item_id));
             session.RemoveItemViaIndex(event.item_id);
@@ -34,9 +34,9 @@ void Application::UpdateOfficeCollisions(DetectData& office_data,
                                          game_session::GameSession& session) {
     auto office_events = collision_detector::FindGatherEvents(office_data);
     for (auto& event : office_events) {
-        game_session::Dog& dog = session.FingDogByIndex(event.gatherer_id);
+        game_session::Dog& dog = session.FindDogByIndex(event.gatherer_id);
         if (dog.GetItemCount() <= session.GetMap().GetMaxBagSize()) {
-            dog.ClearBag();
+            dog.ClearBag(session.GetMap());
         }
     }
 }
@@ -230,7 +230,6 @@ Response Application::Authorization(const Request& req,
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     
     json::object json_res;
-    std::string pl = player.GetToken();
     json_res[AUTHTOKEN] = player.GetToken();
     json_res[PLAYERID] = player.GetDog().GetID();
     response.body() = json::serialize(json_res);
@@ -252,7 +251,7 @@ Response Application::ReturnMapsArray(const Request& req){
         map_it[ID] = *it.GetId();
         map_it[NAME] = it.GetName();
         maps.push_back(map_it);
-    };
+    }
     response.body() = json::serialize(maps);
     response.set(http::field::cache_control, ContentType::NO_CACHE);
     response.content_length(response.body().size());

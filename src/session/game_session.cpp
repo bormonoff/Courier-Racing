@@ -6,14 +6,19 @@ namespace game_session{
 
 const Player& GameSession::AddDog(std::string name, bool randomize) {
     if (randomize) {
-        auto& road = session_map_.GetRoads()[util::GetRandomNumber(0, 
-                                             session_map_.GetRoads().size())];
+        size_t index;
+        if (session_map_.GetRoads().size() == 1) {
+            index = 0;
+        } else {
+            index = util::GetRandomNumber(0, session_map_.GetRoads().size() - 1);
+        }
+        auto& road = session_map_.GetRoads()[index];
         float x,y;
         if (road.IsVertical()) {
             x = road.GetStart().x;
             size_t begin = road.GetStart().y;
             size_t end = road.GetEnd().y;
-            y = util::GetRandomNumber(0, 30)+ 0.1 * util::GetRandomNumber(0, 9);
+            y = util::GetRandomNumber(begin, end - 1) + 0.1 * util::GetRandomNumber(0, 9);
             dogs_.push_back(Dog{std::move(name), dogID_++, Coordinate{x,y}, 
                             session_map_.GetDogSpeed()});
         } else {
@@ -43,7 +48,7 @@ const Player& GameSession::AddDog(std::string name, bool randomize) {
     }
 }
 
-const std::optional<Player> GameSession::FindPlayer(std::string& token) {
+const std::optional<Player> GameSession::FindPlayer(const std::string& token) {
     std::optional<Player> player = players_.FindPlayer(token);
     return player;
 }
@@ -144,7 +149,7 @@ void GameSession::AddOfficesToCollisionDetector(DetectData& detector) {
     }
 }
 
-Dog& GameSession::FingDogByIndex(size_t index) {
+Dog& GameSession::FindDogByIndex(size_t index) {
     for (auto& it : dogs_) { 
         if (it.GetID() == index) {
             return it;

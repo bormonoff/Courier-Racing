@@ -27,7 +27,7 @@ public:
     using Items = std::vector<model::Item>;
 
     Dog(std::string name, size_t id, Coordinate start, double speed)
-        :name_{name}, coordinate_{start}, default_speed{speed} {
+        :name_{name}, coordinate_{start}, default_speed{speed}, scored_points_{0} {
             id_ = id;
             speed_.dx = 0; 
             speed_.dy = 0;
@@ -50,7 +50,7 @@ public:
         return speed_;
     }
 
-    const Items&  GetItemsInBag() const {
+    const Items& GetItemsInBag() const {
         return items_in_bag_;
     }
 
@@ -58,26 +58,30 @@ public:
         return items_in_bag_.size();
     }
 
+    const size_t GetDogScore() const {
+        return scored_points_;
+    }
+
     void SetSpeed(std::string&& drection);
     void MoveDog(Coordinate& target);
     void SetCoordX(double x);
     void SetCoordY(double y);
     void CollectItem(model::Item item);
-    void ClearBag();
-
+    void ClearBag(const model::Map& current_map);
     const std::string GetDirection() const;   
     Coordinate TargetPosition(size_t& time);
 
 private:
     std::string name_;
     size_t id_;
-    static size_t count;
     const double default_speed;
-
+    static size_t count;
+    
     Coordinate coordinate_;
     Speed speed_;
     size_t direction_;
     Items items_in_bag_;
+    size_t scored_points_;
 };
 
 }  // namespace game_session

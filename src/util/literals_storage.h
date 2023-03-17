@@ -61,6 +61,8 @@ struct Allow {
     const std::string AUTHTOKEN = "authToken"s;
     const std::string PLAYERID = "playerId"s;
     const std::string LOSTOBJECTS = "lostObjects"s;
+    const std::string BAG = "bag"s;
+    const std::string SCORE = "score"s;
     //Map literals
     const std::string ROADS = "roads"s;
     const std::string BUILDINGS = "buildings"s;
@@ -100,6 +102,12 @@ namespace json_loader {
     using namespace std::string_literals;
 
     const std::string MAPS = "maps"s;
+    const std::string VALUE = "value"s;
+    const std::string LOOTCONFIG = "lootGeneratorConfig"s;
+    const std::string PERIOD = "period"s;
+    const std::string DEFAULTBAGCAPACITY = "defaultBagCapacity"s;
+    const std::string BAGCAPACITY = "bagCapacity"s;
+    const std::string PROBABILITY = "probability"s;
     const std::string DEFAULTDOGSPEED = "defaultDogSpeed"s;
     const std::string DOGSPEED = "dogSpeed"s;
 }  //namespace boost_log

@@ -46,7 +46,7 @@ Response FindAllPlayerStatesOnMap(const Request& req,
     return response;
 }
 
-void FormPlayersJSON(const game_session::GameSession& session, json::object& ID) {
+void FormPlayersJSON(const game_session::GameSession& session, json::object& obj) {
     for (auto& it : session.GetPlayerTokens().GetPlayers()) {
         json::object data;
         json::array position;
@@ -64,13 +64,15 @@ void FormPlayersJSON(const game_session::GameSession& session, json::object& ID)
         json::array bag;
         for (auto& items : it.second.GetDog().GetItemsInBag()) {
             json::object bag_data;
-            bag_data["id"] = items.ID;
-            bag_data["type"] = items.type;
+            bag_data[ID] = items.ID;
+            bag_data[TYPE] = items.type;
             bag.push_back(bag_data);
         }
-        data["bag"] = bag;
+        data[BAG] = bag;
         
-        ID[std::to_string(it.second.GetDogID())] = data;
+        data[SCORE] = it.second.GetDogScore();
+
+        obj[std::to_string(it.second.GetDogID())] = data;
     }
 }
 
@@ -200,20 +202,6 @@ Response BadRequest(const Request& req) {
     return response;
 }
 
-Response MethodGETAllowed(const Request& req) {
-    Response response{http::status::bad_request, req.version()};
-    response.set(http::field::content_type, ContentType::TYPE_JSON);
-    response.set(http::field::cache_control, ContentType::NO_CACHE);
-    response.set(http::field::allow, Allow::GET);
-
-    json::object json_res;
-    json_res[CODE] = INVALID_METHOD_CODE;
-    json_res[MESSAGE] = GET_ALLOW_MESSAGE;
-    response.body() = json::serialize(json_res);
-    response.content_length(response.body().size());
-    return response;
-}
-
 Response TickFail(const Request& req) {
     Response response{http::status::bad_request, req.version()};
     response.set(http::field::content_type, ContentType::TYPE_JSON);
@@ -229,7 +217,7 @@ Response TickFail(const Request& req) {
 
 json::array ReturnRoads(const model::Map* const this_map) {
     json::array roads;
-    for (const auto &it : this_map-> GetRoads()) {
+    for (const auto &it : this_map -> GetRoads()) {
         json::object road;
         model::Point start_point = it.GetStart();
         road[X0] = start_point.x;
@@ -248,9 +236,9 @@ json::array ReturnRoads(const model::Map* const this_map) {
 
 json::array ReturnBuildings(const model::Map* const this_map) {
     json::array buildings;
-    for(const auto &it : this_map-> GetBuildings()){
+    for(const auto &it : this_map -> GetBuildings()){
         json::object building;
-        model::Rectangle bounds= it.GetBounds();
+        model::Rectangle bounds = it.GetBounds();
         building[X] = bounds.position.x;
         building[Y] = bounds.position.y;
         building[WIDHT] = bounds.size.width;
@@ -262,7 +250,7 @@ json::array ReturnBuildings(const model::Map* const this_map) {
 
 json::array ReturnOffices(const model::Map* const this_map) {
     json::array offices;
-    for (const auto &it : this_map-> GetOffices()) {
+    for (const auto &it : this_map -> GetOffices()) {
         json::object office;
         office[ID] = *it.GetId();
 

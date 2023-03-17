@@ -1,5 +1,7 @@
 #pragma once
 
+#define DEBUG
+
 #include <algorithm>
 #include <string>
 #include <unordered_map>
@@ -141,7 +143,9 @@ public:
     using Things = std::unordered_map<size_t, Item>;
 
     explicit LostThings(size_t period, double probability) 
-        : generator_{std::chrono::milliseconds(period), probability} {}
+        : generator_{std::chrono::milliseconds(period), probability}, 
+          items_types_count_{1},
+          id_{0} {}
 
     const Things& GetLostThings() const noexcept {
         return lost_things_;
@@ -163,14 +167,18 @@ public:
     void SetItemTypesCount(size_t count) noexcept;
     void AddLostThings(const std::vector<Road> &roads, std::chrono::milliseconds delta, 
                        size_t dogs_count);
+    
+#ifdef DEBUG
+    void AddDebugLostThings(double x, double y);
+#endif
 
 private:
     void AddThing(const std::vector<Road> &roads);
 
-    mutable Things lost_things_;
+    Things lost_things_;
     loot_gen::LootGenerator generator_;
-    size_t items_types_count_ {1};
-    size_t id_ {0};
+    size_t items_types_count_;
+    size_t id_;
 };
 
 class RoadMap {
@@ -196,6 +204,7 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
     using Things = std::unordered_map<size_t, Item>;
+    using Points = std::vector<size_t>;
 
     explicit Map(Id id, std::string name, size_t speed, size_t period,
                  size_t bag_capacity, double probability) noexcept
@@ -230,6 +239,10 @@ public:
         return lost_things_.GetLostThings();
     }
 
+    const Points& GetScoreArray() const noexcept {
+        return items_cost_;
+    }
+
     const Offices& GetOffices() const noexcept {
         return offices_;
     }
@@ -248,10 +261,15 @@ public:
 
     void AddRoad(const Road& road);
     void AddOffice(Office office);
+    void AddItemCost(size_t count);
     void RemoveItemFromMap(size_t index) const;
     void GenerateThings(size_t delta_time, size_t dogs_count) const;
     void SetTypesCount(size_t count);
     const Item GetLostThingViaIndex(size_t index) const noexcept;
+
+#ifdef DEBUG
+    void GenerateDebugThings(double x, double y) const;
+#endif
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -262,6 +280,7 @@ private:
     Buildings buildings_;
     Offices offices_;
     RoadMap dog_map_; 
+    Points items_cost_;
     mutable LostThings lost_things_;
 
     double dog_speed_;

@@ -17,8 +17,9 @@ using DetectData = collision_detector::ItemGathererProvider;
 
 class GameSession {
 public:
-    GameSession(const model::Map& map)
-        : session_map_{map}{}
+    explicit GameSession(const model::Map& map)
+        : session_map_{map}, 
+          dogID_{0} {}
 
     const PlayerTokens& GetPlayerTokens() const {
         return players_;
@@ -34,17 +35,17 @@ public:
     void AddItemsToCollisionDetector(DetectData& detector);
     void AddOfficesToCollisionDetector(DetectData& detector);
     bool TargetInsideRoad(const model::Road& road, Coordinate& target);  
-    Dog& FingDogByIndex(size_t index);
+    Dog& FindDogByIndex(size_t index);
     FindRoadOpt FindRoad(const std::vector<model::Road>& roads, Dog& dog) const;
     Coordinate& CalculateResult(const model::Road& road, Coordinate& target, 
                                 Dog& dog);
     const Player& AddDog(std::string name, bool randomize);
-    const std::optional<Player> FindPlayer(std::string& token);
+    const std::optional<Player> FindPlayer(const std::string& token);
     
 private:
     const model::Map& session_map_;
     std::deque<Dog> dogs_;
     PlayerTokens players_;
-    size_t dogID_ {0};
+    size_t dogID_;
 };
 }  // namespace game_session

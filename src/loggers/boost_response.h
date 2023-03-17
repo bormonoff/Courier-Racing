@@ -31,7 +31,7 @@ struct StartServer{
 
 
 struct FinishServer {
-    FinishServer(int code)
+    explicit FinishServer(int code)
         : code_{code} {}
 
     int code_;
@@ -39,7 +39,7 @@ struct FinishServer {
 
 struct ExceptionReciever {
     ExceptionReciever(int code, std::string_view where, std::string what)
-        : code_{code},where_{where}, what_{what} {}
+        : code_{code}, what_{what}, where_{where} {}
 
     int code_;
     std::string what_;

@@ -14,7 +14,7 @@ namespace json = boost::json;
 using Response = http::response<http::string_body>;
 using Request = http::request<http::string_body>;
 
-void FormPlayersJSON(const game_session::GameSession& session, json::object& ID);
+void FormPlayersJSON(const game_session::GameSession& session, json::object& obj);
 void FormItemsJSON(const game_session::GameSession& session, json::object& lost_objects);
 Response FindAllPlayerStatesOnMap(const Request& req, 
                                   const game_session::GameSession& session);
@@ -30,7 +30,6 @@ Response InvalidPlayerName(const Request& req);
 Response ParseError(const Request& req);
 Response ReturnMap(const model::Map* const this_map, const Request& req);
 Response BadRequest(const Request& req);
-Response MethodGETAllowed(const Request& req);
 Response TickFail(const Request& req);
 json::array ReturnRoads(const model::Map* const this_map);
 json::array ReturnBuildings(const model::Map* const this_map);
