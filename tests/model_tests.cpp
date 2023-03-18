@@ -4,15 +4,14 @@
 
 using namespace std::literals;
 
-SCENARIO("Model") {
+SCENARIO("model logic") {
     using namespace model;
 
     GIVEN("a map") {
-        std::string ID {"map"};
-        std::string name {"Map1"};
+        using MapTag = util::Tagged<std::string, Map>;
+
         size_t speed {5}, period {1}, probability {1}, bag_size {5};
-        Map map(util::Tagged<std::string, Map>(ID),
-                       name, speed, bag_size, period, probability);
+        Map map(MapTag("id"), "name", speed, bag_size, period, probability);
         map.AddRoad(Road{Road::HORIZONTAL, Point{30,0}, 0});
 
         SECTION("RoadMap class tests") {
@@ -25,7 +24,7 @@ SCENARIO("Model") {
 
             WHEN("add road in map") {
                 AND_WHEN("start of the first road is equal to finish of the second and their direction is the same") {
-                    THEN("they merge together and the result road have start of the first finish of the second") {
+                    THEN("they merge together and the result road have start of the first and finish of the second") {
                         map.AddRoad((Road{Road::HORIZONTAL, Point{50,0}, 30}));
                         CHECK(map.GetRoadMap()[0].GetStart().x == 0);
                         CHECK(map.GetRoadMap()[0].GetEnd().x == 50);

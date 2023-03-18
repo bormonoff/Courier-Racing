@@ -27,6 +27,20 @@ add_library(GameLib STATIC
 
 target_include_directories(GameLib PUBLIC src)
 
+add_library(GameSessionLib STATIC 
+	src/session/dog.h
+	src/session/dog.cpp
+	src/session/game_session.h
+	src/session/game_session.cpp
+	src/session/player.h
+	src/session/player.cpp
+	src/session/player_token.h
+	src/session/player_token.cpp
+)
+
+target_include_directories(GameSessionLib PUBLIC src)
+
+
 add_executable(game_server 
 	src/main.cpp
 	src/sdk.h
@@ -44,14 +58,6 @@ add_executable(game_server
 	src/handlers/application.cpp
 	src/handlers/api_response_storage.h
 	src/handlers/api_response_storage.cpp
-	src/session/dog.h
-	src/session/dog.cpp
-	src/session/game_session.h
-	src/session/game_session.cpp
-	src/session/player.h
-	src/session/player.cpp
-	src/session/player_token.h
-	src/session/player_token.cpp
 	src/loggers/boost_log.cpp
 	src/loggers/boost_log.h
 	src/loggers/boost_response.h
@@ -65,28 +71,59 @@ add_executable(game_server
 	src/commands/options.cpp
 )
 add_executable(test_model 
-	tests/model-tests.cpp
+	tests/model_tests.cpp
 )
 
 add_executable(test_loot_generator 
-	tests/loot-generator_tests.cpp
+	tests/loot_generator_tests.cpp
 )
 
 add_executable(test_collision_detector
-	tests/collision-detector-tests.cpp
+	tests/collision_detector_tests.cpp
 )
 
-target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib)
+add_executable(test_dog
+	tests/dog_tests.cpp
+)
+
+add_executable(test_player_token
+	tests/player_token_tests.cpp
+	tests/catch2_custom_types.h
+)
+
+add_executable(test_game_session
+	tests/game_session_tests.cpp
+	tests/catch2_custom_types.h
+)
+
+target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib GameSessionLib)
 target_link_libraries(test_loot_generator PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_model PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_collision_detector PRIVATE CONAN_PKG::catch2 GameLib)
+target_link_libraries(test_dog PRIVATE CONAN_PKG::catch2 GameLib GameSessionLib)
+target_link_libraries(test_player_token PRIVATE CONAN_PKG::catch2 GameSessionLib GameLib)
+target_link_libraries(test_game_session PRIVATE CONAN_PKG::catch2 GameSessionLib GameLib)
 
 target_include_directories(game_server PRIVATE CONAN_PKG::boost	src)
 target_include_directories(test_loot_generator PRIVATE src)
 target_include_directories(test_model PRIVATE src)
 target_include_directories(test_collision_detector PRIVATE src)
+target_include_directories(test_dog PRIVATE src)
+target_include_directories(test_player_token PRIVATE src)
+target_include_directories(test_game_session PRIVATE src)
 
 set(CMAKE_BUILD_TYPE Debug)
+
+include(CTest)
+include(${CONAN_BUILD_DIRS_CATCH2}/Catch.cmake) 
+
+catch_discover_tests(test_model) 
+catch_discover_tests(test_loot_generator) 
+catch_discover_tests(test_collision_detector) 
+catch_discover_tests(test_dog) 
+catch_discover_tests(test_player_token) 
+catch_discover_tests(test_game_session) 
+
 
 add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 
