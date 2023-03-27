@@ -46,9 +46,11 @@ int main(int argc, char* argv[]) {
         net::io_context ioc(num_threads);
 
         auto handler = std::make_shared<http_handler::RequestHandler>(ioc, game, 
-                                                                      args.root, 
+                                                                      args.root,
+                                                                      args.store_data, 
                                                                       args.milliseconds, 
                                                                       args.random_spawn,
+                                                                      args.save_interval,
                                                                       std::move(loot_types));
         http_handler::RequestLoggerHandler logger_handler{std::move(handler)};
 
@@ -56,8 +58,6 @@ int main(int argc, char* argv[]) {
         signals.async_wait([&ioc](const boost::system::error_code& error, 
                                   int signal_number) {
             if (!error) {
-                BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("server exited", 
-                                            boost_log::FinishServer(EXIT_SUCCESS));
                 ioc.stop();
             }
         });
@@ -80,6 +80,14 @@ int main(int argc, char* argv[]) {
         RunWorkers(num_threads, [&ioc]{
             ioc.run();
         });    
+
+        if (!args.store_data.empty()) {
+            handler -> SaveState();
+            BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("Data has saved.", 
+                                        boost_log::FinishServer(EXIT_SUCCESS));
+        }
+        BOOST_LOG_TRIVIAL(error) << boost_log::MakeResponse("Server has exited.", 
+                                    boost_log::FinishServer(EXIT_SUCCESS));
 
     }
     catch (const std::exception& ex) {

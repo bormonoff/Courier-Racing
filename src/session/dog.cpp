@@ -4,7 +4,13 @@
 
 namespace game_session{
 
-size_t Dog::count = 0;
+Dog::Dog(std::string name, size_t id, Coordinate start, double speed)
+    : name_{name}, coordinate_{start}, default_speed{speed}, scored_points_{0} {
+        id_ = id;
+        speed_.dx = 0; 
+        speed_.dy = 0;
+        direction_ = Direction::UP;
+}
 
 const std::string Dog::GetDirection() const {
     switch (direction_){
@@ -54,7 +60,7 @@ void Dog::SetSpeed(std::string&& direction) {
 
 Coordinate Dog::TargetPosition(size_t& time) {
     return Coordinate{coordinate_.x + speed_.dx * time* 0.001, 
-                        coordinate_.y + speed_.dy * time * 0.001};
+                      coordinate_.y + speed_.dy * time * 0.001};
 }
 
 void Dog::SetCoordY(double y) {
@@ -79,5 +85,26 @@ void Dog::SetCoordX(double x) {
 void Dog::MoveDog(Coordinate& target) {
     coordinate_.x = target.x;
     coordinate_.y = target.y;
+}
+
+void Dog::SetDirectionViaInt(size_t direction) {
+    direction_ = direction;
+} 
+
+void Dog::SetSpeed(Speed& speed) {
+    speed_ = speed;
+}
+void Dog::AddScorePoints(size_t points_to_add) {
+    scored_points_ += points_to_add;
+}
+
+bool operator==(const Dog& first, const Dog& second) {
+    return first.GetName() == second.GetName() &&
+           first.GetDefaultSpeed() == second.GetDefaultSpeed() && 
+           first.GetStartPoint() == second.GetStartPoint() &&
+           first.GetSpeed() == second.GetSpeed() &&
+           first.GetDirection() == second.GetDirection() &&
+           first.GetItemsInBag() == second.GetItemsInBag() &&
+           first.GetDogScore() == second.GetDogScore();
 }
 }  // namespace game_session

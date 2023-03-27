@@ -8,6 +8,10 @@ const Player& PlayerTokens::AddPlayer(Dog& dog) {
     return players_.find(token)->second;
 }
 
+void PlayerTokens::AddPlayer(Player& player) {
+    players_.emplace(player.GetToken(), player);
+}
+
 const std::optional<Player> PlayerTokens::FindPlayer(std::string token) {
     if (players_.find(token) != players_.end()) {
         std::optional<Player> player = players_.find(token)->second;

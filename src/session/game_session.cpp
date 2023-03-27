@@ -4,6 +4,11 @@
 
 namespace game_session{
 
+GameSession::GameSession(const model::Map& map)
+    : session_map_{map}, 
+      dogID_{0} {}
+
+
 const Player& GameSession::AddDog(std::string name, bool randomize) {
     if (randomize) {
         size_t index;
@@ -166,4 +171,12 @@ void GameSession::GenerateThingsOnMap(size_t time) {
     session_map_.GenerateThings(time, dogs_.size());
 }
 
+void GameSession::SetIdCount(size_t Id) {
+    dogID_ = Id;
+}
+
+void GameSession::AddDog(std::string& token, Dog dog) {
+    game_session::Player player{token, dogs_.emplace_back(dog)};
+    players_.AddPlayer(player);
+}
 }  // namespace game_session

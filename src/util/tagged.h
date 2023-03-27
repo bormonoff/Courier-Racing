@@ -1,6 +1,8 @@
 #pragma once
 
 #include <compare>
+#include <cstddef>
+#include <string>
 
 namespace util {
 
@@ -16,6 +18,9 @@ public:
     explicit Tagged(const Value& v)
         : value_(v) {
     }
+
+    Tagged() = delete;
+    Tagged& operator=(const Tagged&) = delete;
 
     const Value& operator*() const {
         return value_;

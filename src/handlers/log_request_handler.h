@@ -3,7 +3,7 @@
 #include <boost/json.hpp>
 
 #include "core/http_server.h"
-#include "model/model.h"
+#include "model/game.h"
 #include "loggers/boost_log.h"
 #include "util/utils.h"
 

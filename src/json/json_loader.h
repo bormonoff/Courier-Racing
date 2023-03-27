@@ -7,7 +7,7 @@
 #include <boost/json.hpp>
 
 #include "json/json_loot_types_storage.h"
-#include "model/model.h"
+#include "model/game.h"
 
 namespace json_loader { 
 

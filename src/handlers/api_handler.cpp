@@ -47,4 +47,8 @@ Response ApiHandler::MakeResponse(const Request& req,
 
     return BadRequest(req);
 }
+
+void ApiHandler::SaveState() {
+    scenarios_.SaveTofile(0, true);
+}
 }  //namespace http_handler

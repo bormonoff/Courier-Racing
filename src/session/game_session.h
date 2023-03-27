@@ -3,12 +3,11 @@
 #include <deque>
 
 #include "model/collision_detector.h"
-#include "model/model.h"
+#include "model/game.h"
 #include "session/dog.h"
 #include "session/player_token.h"
-#include "util/utils.h"
 
-#include <iostream>
+#include "util/utils.h"
 
 namespace game_session {
 
@@ -17,9 +16,10 @@ using DetectData = collision_detector::ItemGathererProvider;
 
 class GameSession {
 public:
-    explicit GameSession(const model::Map& map)
-        : session_map_{map}, 
-          dogID_{0} {}
+    explicit GameSession(const model::Map& map);
+
+    GameSession(const GameSession&) = default;
+    GameSession& operator=(const GameSession&) = default;
 
     const PlayerTokens& GetPlayerTokens() const {
         return players_;
@@ -28,7 +28,16 @@ public:
     const model::Map& GetMap() const {
         return session_map_;
     }
-    
+
+    const std::deque<Dog> GetDogs() const {
+        return dogs_;
+    }
+
+    size_t GetIdCount() const {
+        return dogID_;
+    }
+
+    void SetIdCount(size_t Id);    
     void GenerateThingsOnMap(size_t time);
     void RemoveItemViaIndex(size_t index);
     void MakeOffset(size_t& time, DetectData& detector);
@@ -40,6 +49,7 @@ public:
     Coordinate& CalculateResult(const model::Road& road, Coordinate& target, 
                                 Dog& dog);
     const Player& AddDog(std::string name, bool randomize);
+    void AddDog(std::string& token, Dog dog);
     const std::optional<Player> FindPlayer(const std::string& token);
     
 private:

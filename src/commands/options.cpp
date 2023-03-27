@@ -15,10 +15,15 @@ Args ParseCommandLine(int argc, const char* const argv[]) {
          "set config file path")  
         ("www-root,w", po::value(&args.root)->value_name("dir"), 
          "set static files root")
-        ("tick-period,t", po::value(&args.milliseconds)->value_name("milliseconds"),
+        ("tick-period,t", po::value(&args.milliseconds)->value_name("ms"),
          "set tick period")
+        ("state-file,s", po::value(&args.store_data)->value_name("file"),
+        "set path to save")
+        ("save-period,p", po::value(&args.save_interval)->value_name("ms"),
+        "set store data period")
         ("randomize-spawn-points,r",
          "spawn dogs at random positions");
+        
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

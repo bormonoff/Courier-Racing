@@ -20,6 +20,9 @@ void Ticker::OnTick(sys::error_code ec) {
         std::chrono::steady_clock::now();
     std::chrono::milliseconds duration = 
         std::chrono::duration_cast<std::chrono::milliseconds>(current_tick - last_tick_);
+    
+    // TODO Asio Strand doesn't work correctly. 
+    // After Postgre dive deeper into boost asio
     mutex.lock();
     handler_(duration.count());
     mutex.unlock();

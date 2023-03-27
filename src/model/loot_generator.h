@@ -1,4 +1,5 @@
 #pragma once
+
 #include <chrono>
 #include <functional>
 
@@ -10,10 +11,17 @@ public:
     using TimeInterval = std::chrono::milliseconds;
 
     LootGenerator(TimeInterval base_interval, double probability,
-                  RandomGenerator random_gen = DefaultGenerator)
-        : base_interval_{base_interval},
-          probability_{probability},
-          random_generator_{std::move(random_gen)} {
+                  RandomGenerator random_gen = DefaultGenerator);
+    
+    LootGenerator(const LootGenerator&) = default;
+    LootGenerator& operator=(const LootGenerator&) = default;
+
+    const double GetProbability() const noexcept {
+        return probability_;
+    }
+
+    const size_t GetInterval() const noexcept {
+        return base_interval_.count();
     }
 
     unsigned Generate(TimeInterval time_delta, unsigned loot_count, 

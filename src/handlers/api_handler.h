@@ -10,9 +10,12 @@ using Request = http::request<http::string_body>;
 
 class ApiHandler{
 public:
-    explicit ApiHandler(model::Game& game, Strand& strand, size_t period, bool random_spawn,
-                        json_loot::LootTypes&& loot_types)
-        : scenarios_{game, strand, period, random_spawn, std::move(loot_types)}{
+    explicit ApiHandler(model::Game& game, Strand& strand, size_t period, 
+                        bool random_spawn, size_t save_interval, 
+                        json_loot::LootTypes&& loot_types, 
+                        const std::filesystem::path& path_to_state)
+        : scenarios_{game, strand, period, random_spawn, save_interval, 
+                     std::move(loot_types), path_to_state} {
     }
 
     ApiHandler(const ApiHandler&) = delete;
@@ -20,6 +23,8 @@ public:
     
     Response MakeResponse(const Request& req,
                           const std::vector<std::string>& URL_path);
+    void SaveState();
+
 private:
     Application scenarios_;
 };

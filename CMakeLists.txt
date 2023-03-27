@@ -15,8 +15,17 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_library(GameLib STATIC 
-	src/model/model.h
-	src/model/model.cpp
+	src/model/road.h
+	src/model/building.h
+	src/model/office.h
+	src/model/lost_things.h
+	src/model/lost_things.cpp
+	src/model/roadmap.h
+	src/model/roadmap.cpp
+	src/model/map.h
+	src/model/map.cpp
+	src/model/game.h
+	src/model/game.cpp
 	src/model/loot_generator.h
 	src/model/loot_generator.cpp
 	src/model/collision_detector.h
@@ -49,11 +58,17 @@ add_executable(game_server
 	src/json/json_loader.h
 	src/json/json_loader.cpp
 	src/json/json_loot_types_storage.h
+	src/serialization/item_serialization.h
+	src/serialization/item_serialization.cpp
+	src/serialization/dog_serialization.h
+	src/serialization/dog_serialization.cpp
+	src/serialization/session_serialization.h
+	src/serialization/session_serialization.cpp
 	src/handlers/request_handler.cpp
 	src/handlers/request_handler.h
 	src/handlers/api_handler.h
 	src/handlers/api_handler.cpp
-	src/handlers/logging_request_handler.h
+	src/handlers/log_request_handler.h
 	src/handlers/application.h
 	src/handlers/application.cpp
 	src/handlers/api_response_storage.h
@@ -96,6 +111,16 @@ add_executable(test_game_session
 	tests/catch2_custom_types.h
 )
 
+add_executable(test_serialization
+	tests/state_serialization_tests.cpp
+	src/serialization/item_serialization.h
+	src/serialization/item_serialization.cpp
+	src/serialization/dog_serialization.h
+	src/serialization/dog_serialization.cpp
+	src/serialization/session_serialization.h
+	src/serialization/session_serialization.cpp
+)
+
 target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib GameSessionLib)
 target_link_libraries(test_loot_generator PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_model PRIVATE CONAN_PKG::catch2 GameLib)
@@ -103,6 +128,7 @@ target_link_libraries(test_collision_detector PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_dog PRIVATE CONAN_PKG::catch2 GameLib GameSessionLib)
 target_link_libraries(test_player_token PRIVATE CONAN_PKG::catch2 GameSessionLib GameLib)
 target_link_libraries(test_game_session PRIVATE CONAN_PKG::catch2 GameSessionLib GameLib)
+target_link_libraries(test_serialization PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost GameSessionLib GameLib)
 
 target_include_directories(game_server PRIVATE CONAN_PKG::boost	src)
 target_include_directories(test_loot_generator PRIVATE src)
@@ -111,6 +137,9 @@ target_include_directories(test_collision_detector PRIVATE src)
 target_include_directories(test_dog PRIVATE src)
 target_include_directories(test_player_token PRIVATE src)
 target_include_directories(test_game_session PRIVATE src)
+target_include_directories(test_serialization PRIVATE CONAN_PKG::boost src)
+
+
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -123,6 +152,7 @@ catch_discover_tests(test_collision_detector)
 catch_discover_tests(test_dog) 
 catch_discover_tests(test_player_token) 
 catch_discover_tests(test_game_session) 
+catch_discover_tests(test_serialization) 
 
 
 add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)

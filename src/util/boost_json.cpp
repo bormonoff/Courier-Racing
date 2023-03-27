@@ -1,3 +1,2 @@
-// Этот файл служит для подключения реализации библиотеки Boost.Json
-
+// Boost Json needs this file
 #include <boost/json/src.hpp>

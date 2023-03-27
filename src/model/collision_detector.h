@@ -44,6 +44,11 @@ CollectionResult TryCollectPoint(Point2D a, Point2D b, Point2D c);
 
 class ItemGathererProvider {
 public:
+    ItemGathererProvider() = default;
+
+    ItemGathererProvider(const ItemGathererProvider&) = default;
+    ItemGathererProvider& operator=(const ItemGathererProvider&) = default;
+
     size_t ItemsCount() const {
         return items_.size();
     }

@@ -1,6 +1,34 @@
 #include "handlers/application.h"
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 namespace http_handler {
+
+Application::Application(model::Game& game, Strand& strand, 
+                         size_t period, bool random_spawn, 
+                         size_t save_interval,
+                         json_loot::LootTypes&& loot_types,
+                         const std::filesystem::path& path_to_state)
+    : game_{game},
+        strand_{strand},
+        random_spawn_{random_spawn},
+        loot_{std::move(loot_types)}, 
+        path_to_state_{path_to_state},
+        period_{std::chrono::milliseconds(period)},
+        save_interval_{std::chrono::milliseconds(save_interval)} {
+    if (!path_to_state_.empty()) {
+        RestoreFromFile();
+    }
+    if (period) {
+        ticker_ = std::make_shared<time_control::Ticker>(
+            strand_, 
+            period_, 
+            std::bind(&Application::UpdateState, this, std::placeholders::_1)
+        );
+        ticker_->Start();
+    }
+}
 
 void Application::UpdateState(size_t milliseconds) {
     for (auto& it : sessions_) {
@@ -15,7 +43,55 @@ void Application::UpdateState(size_t milliseconds) {
         DetectData base_collision_collector {std::move(collision_collector)};
         it.second.AddOfficesToCollisionDetector(base_collision_collector);
         UpdateOfficeCollisions(base_collision_collector, it.second);
+
+        if (!path_to_state_.empty()) {
+            SaveTofile(milliseconds);
+        }
     }
+}
+
+void Application::SaveTofile(size_t milliseconds, bool save) {
+    interval_since_save_ += std::chrono::milliseconds(milliseconds);
+    if (save_interval_.count() <= interval_since_save_.count() || save == true) {
+        std::filesystem::path temp = path_to_state_;
+        temp.append("temp.txt");
+        std::ofstream ios{temp};
+        if (!ios) {
+            throw std::runtime_error("can't save server data");
+        }
+        boost::archive::text_oarchive oa{ios};
+        serialization::GameSessionStorage storage{};
+        for (auto& session : sessions_) {
+            serialization::GameSessionRepr temp{session.second};
+            storage.AddSession(temp);
+        }
+        oa << storage;
+        ios.close();
+        std::filesystem::rename(temp, path_to_state_.append("save.txt"));
+        path_to_state_.remove_filename();
+    }
+}
+
+void Application::RestoreFromFile() {
+    std::ifstream ios{path_to_state_};
+    if (ios.peek() != EOF) {
+        boost::archive::text_iarchive ia{ios};
+        serialization::GameSessionStorage storage{};
+        try {
+            ia >> storage;
+            for (auto& session : storage.GetSessions()) {
+                const model::Map* const map_model = game_.FindMap(util::Tagged<std::string, 
+                                                            model::Map>(session.GetMap()));
+                game_session::GameSession recover{*map_model};
+                auto iterator = sessions_.emplace(session.GetMap(), recover);
+                session.Recover(iterator.first -> second);
+            }
+        } catch(std::exception& ex) {
+            throw std::runtime_error("restore data is corrupted");
+        }
+    }
+    ios.close();
+    path_to_state_.remove_filename();
 }
 
 void Application::UpdateItemCollisions(DetectData& item_data, 

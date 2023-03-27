@@ -6,8 +6,10 @@ namespace game_session{
 
 class Player {
 public:
-    Player(const std::string& token, Dog& dog)
-        : dog_{dog}, token_{token} {};
+    explicit Player(const std::string& token, Dog& dog);
+
+    Player() = delete;
+    Player& operator=(const Player&) = delete;
 
     const Dog& GetDog() const {
         return dog_;
@@ -42,6 +44,7 @@ public:
     }
 
     void SetDogSpeed(std::string&& direction);
+    
 private:
     Dog& dog_;
     const std::string token_;

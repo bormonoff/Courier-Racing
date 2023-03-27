@@ -125,6 +125,11 @@ void DownScale(std::string& string) {
         }
     }
 }
+
+void RequestHandler::SaveState() {
+    api_handler_.SaveState();
+}
+
 }  // namespace http_handler
 
 

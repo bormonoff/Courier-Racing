@@ -5,7 +5,7 @@
 #include <optional>
 
 #include "handlers/api_handler.h"
-#include "handlers/logging_request_handler.h"
+#include "handlers/log_request_handler.h"
 
 namespace http_handler {
 
@@ -19,10 +19,12 @@ public:
 
     explicit RequestHandler(net::io_context& ioc, model::Game& game, 
                             const std::filesystem::path& path_to_content, 
-                            size_t period, bool random_spawn, 
+                            const std::filesystem::path& path_to_state,
+                            size_t period, bool random_spawn, size_t save_interval,
                             json_loot::LootTypes&& loot_types)
         : strand_{net::make_strand(ioc)},
-          api_handler_{game, strand_, period, random_spawn, std::move(loot_types)},
+          api_handler_{game, strand_, period, random_spawn, save_interval, 
+                       std::move(loot_types), path_to_state},
           path_to_content_{path_to_content} {}
 
     RequestHandler(const RequestHandler&) = delete;
@@ -33,7 +35,8 @@ public:
                     Send&& send) {
         std::vector<std::string> parseURL{std::move(ReadURL(req))};
         if (parseURL[0] == "api") {
-                      //TODO Handle usind Strand
+                      // TODO Handle usind Strand
+                      // after postgreSQL
             mutex.lock();
             send(std::move(api_handler_.MakeResponse(req, parseURL)));
             mutex.unlock();
@@ -50,7 +53,8 @@ public:
 
 std::optional<http::response<http::file_body>> MakeFileResponse(
         const http::request<http::string_body> &req,
-        const std::vector<std::string>& URL_path);                                             
+        const std::vector<std::string>& URL_path);     
+void SaveState();                                        
 
 private:
     Strand strand_;

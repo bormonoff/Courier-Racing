@@ -4,6 +4,12 @@
 #include <cmath>
 
 namespace loot_gen {
+    
+LootGenerator::LootGenerator(TimeInterval base_interval, double probability,
+                             RandomGenerator random_gen)
+    : base_interval_{base_interval},
+      probability_{probability},
+      random_generator_{std::move(random_gen)} {}
 
 unsigned LootGenerator::Generate(TimeInterval time_delta, unsigned loot_count,
                                  unsigned looter_count) {

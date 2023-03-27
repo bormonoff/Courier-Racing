@@ -117,8 +117,8 @@ SCENARIO("GameSession class") {
 
             WHEN("dog runs near item") { 
                 THEN("dog gets this item") {
-                    game.GetMap().GenerateDebugThings(11.0, 10.29);
-                    game.GetMap().GenerateDebugThings(15.0, 10.12);
+                    game.GetMap().AddItem(0, {11.0, 10.29, 0, 0});
+                    game.GetMap().AddItem(1, {15.0, 10.12, 0, 0});
                     game.MakeOffset(time, temp);
                     game.AddItemsToCollisionDetector(temp);
                     INFO("Dog runs from {10.0, 10.0} to {15.0, 10.0} and try to collect"
@@ -129,8 +129,8 @@ SCENARIO("GameSession class") {
 
             WHEN("dog runs far from item") { 
                 THEN("dog can't take items") {
-                    game.GetMap().GenerateDebugThings(11.0, 10.3);
-                    game.GetMap().GenerateDebugThings(16.0, 10.12);
+                    game.GetMap().AddItem(0, {11.0, 10.3, 0, 0});
+                    game.GetMap().AddItem(1, {16.0, 10.12, 0, 0});
                     game.MakeOffset(time, temp);
                     game.AddItemsToCollisionDetector(temp);
                     INFO("Dog runs from {10.0, 10.0} to {15.0, 10.0} and try to collect"

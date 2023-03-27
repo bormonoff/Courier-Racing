@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "model/model.h"
+#include "model/game.h"
 
 using namespace std::literals;
 

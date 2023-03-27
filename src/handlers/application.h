@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <functional>
+#include <filesystem>
 #include <map>
 #include <optional>
 
@@ -11,7 +12,8 @@
 #include "handlers/api_response_storage.h"
 #include "json/json_loot_types_storage.h"
 #include "model/collision_detector.h"
-#include "model/model.h"
+#include "model/game.h"
+#include "serialization/session_serialization.h"
 #include "time/ticker.h"
 
 namespace http_handler {
@@ -30,27 +32,14 @@ class Application {
 public:
     explicit Application(model::Game& game, Strand& strand, 
                          size_t period, bool random_spawn, 
-                         json_loot::LootTypes&& loot_types)
-        : game_{game},
-          strand_{strand},
-          period_{std::chrono::milliseconds(period)},
-          random_spawn_{random_spawn},
-          loot_{std::move(loot_types)} {
-        if(period){
-            ticker_ = std::make_shared<time_control::Ticker>(
-                strand_, 
-                period_, 
-                std::bind(&Application::UpdateState, this, std::placeholders::_1)
-            );
-            ticker_->Start();
-        }
-    }
+                         size_t save_interval,
+                         json_loot::LootTypes&& loot_types,
+                         const std::filesystem::path& path_to_state);
 
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
     const model::Game& GetGame() const;
-
     Response GetPlayers(const Request& req);
     Response GetState(const Request& req);
     Response MoveDogs(const Request& req);
@@ -67,14 +56,23 @@ public:
                               game_session::GameSession& session);
     void UpdateOfficeCollisions(DetectData& office_data, 
                                 game_session::GameSession& session);
+    void SaveTofile(size_t milliseconds, bool save = false);
 
     json_loot::LootTypes loot_;
+
 private:
-    bool random_spawn_;
+    void RestoreFromFile();
+
     model::Game& game_;
     Strand& strand_;
     std::shared_ptr<time_control::Ticker> ticker_;
-    std::chrono::milliseconds period_;
     std::map<std::string, game_session::GameSession> sessions_;
+
+    std::filesystem::path path_to_state_;
+    std::chrono::milliseconds period_;
+    std::chrono::milliseconds save_interval_;
+    std::chrono::milliseconds interval_since_save_{0};
+
+    bool random_spawn_;
 };
 } //namespace http_handler
