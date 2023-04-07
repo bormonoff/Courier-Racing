@@ -4,8 +4,9 @@
 
 namespace game_session{
 
-Dog::Dog(std::string name, size_t id, Coordinate start, double speed)
-    : name_{name}, coordinate_{start}, default_speed{speed}, scored_points_{0} {
+Dog::Dog(std::string name, size_t id, Coordinate start, double speed, size_t lifetime_s)
+    : name_{name}, coordinate_{start}, default_speed_{speed}, scored_points_{0}, 
+      retriement_time_{lifetime_s}, life_time_{0}, play_time_{0} {
         id_ = id;
         speed_.dx = 0; 
         speed_.dy = 0;
@@ -36,23 +37,23 @@ void Dog::SetSpeed(std::string&& direction) {
     switch (direction.at(0)) {
         case ('L'):
             direction_ = Direction::LEFT;
-            speed_.dx = -default_speed;
+            speed_.dx = -default_speed_;
             speed_.dy = 0.0;
             return;
         case ('U'):
             direction_ = Direction::UP;
             speed_.dx = 0;
-            speed_.dy = -default_speed;
+            speed_.dy = -default_speed_;
             return;
         case ('R'):
             direction_ = Direction::RIGHT;
-            speed_.dx = default_speed;
+            speed_.dx = default_speed_;
             speed_.dy = 0.0;
             return;
         case ('D'):
            direction_ = Direction::DOWN;
             speed_.dx = 0;
-            speed_.dy = default_speed;
+            speed_.dy = default_speed_;
             return;
     }
     throw "Error in dog SetSpeed func";
@@ -98,6 +99,30 @@ void Dog::AddScorePoints(size_t points_to_add) {
     scored_points_ += points_to_add;
 }
 
+bool Dog::CalculateLive(const std::chrono::milliseconds& interval, bool move) {
+        play_time_ += interval;
+        if (move) {
+            life_time_ = std::chrono::milliseconds{0};
+            return true;
+        }
+        life_time_ += interval;
+        if (life_time_ > retriement_time_) {
+            return false;
+        }
+        return true;
+}
+
+bool Dog::IsMoving() const {
+        if(speed_.dx == 0.0 && speed_.dy == 0.0) {
+            return false;
+        }
+    return true;
+}
+
+void Dog::SetId(size_t id) {
+    id_ = id;
+}
+
 bool operator==(const Dog& first, const Dog& second) {
     return first.GetName() == second.GetName() &&
            first.GetDefaultSpeed() == second.GetDefaultSpeed() && 
@@ -105,6 +130,7 @@ bool operator==(const Dog& first, const Dog& second) {
            first.GetSpeed() == second.GetSpeed() &&
            first.GetDirection() == second.GetDirection() &&
            first.GetItemsInBag() == second.GetItemsInBag() &&
-           first.GetDogScore() == second.GetDogScore();
+           first.GetDogScore() == second.GetDogScore() &&
+           first.GetRetriementTime() == second.GetRetriementTime();
 }
 }  // namespace game_session

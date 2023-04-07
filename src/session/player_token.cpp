@@ -20,6 +20,20 @@ const std::optional<Player> PlayerTokens::FindPlayer(std::string token) {
     return std::nullopt;
 }
 
+Leaders PlayerTokens::CalculateLifetime(const std::chrono::milliseconds& interval) {
+    Leaders result;
+    for (auto it = players_.begin(); it != players_.end();) {
+        if(!it->second.CalculateLifetime(interval)) {
+            auto& dog = it->second.GetDog();
+            result.emplace_back(dog.GetName(), dog.GetDogScore(), dog.GetPlayTime());
+            it = players_.erase(it);
+            continue;
+        }
+        ++it;
+    }
+    return result;
+}
+
 std::string GenerateToken() {
     std::stringstream ss;
     std::string result;

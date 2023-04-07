@@ -9,14 +9,16 @@ Application::Application(model::Game& game, Strand& strand,
                          size_t period, bool random_spawn, 
                          size_t save_interval,
                          json_loot::LootTypes&& loot_types,
-                         const std::filesystem::path& path_to_state)
+                         const std::filesystem::path& path_to_state,
+                         postgres::DataBase& data_base)
     : game_{game},
         strand_{strand},
         random_spawn_{random_spawn},
         loot_{std::move(loot_types)}, 
         path_to_state_{path_to_state},
         period_{std::chrono::milliseconds(period)},
-        save_interval_{std::chrono::milliseconds(save_interval)} {
+        save_interval_{std::chrono::milliseconds(save_interval)},
+        use_cases_{data_base} {
     if (!path_to_state_.empty()) {
         RestoreFromFile();
     }
@@ -43,10 +45,9 @@ void Application::UpdateState(size_t milliseconds) {
         DetectData base_collision_collector {std::move(collision_collector)};
         it.second.AddOfficesToCollisionDetector(base_collision_collector);
         UpdateOfficeCollisions(base_collision_collector, it.second);
+        CalculateLifetime(it.second, milliseconds);
 
-        if (!path_to_state_.empty()) {
-            SaveTofile(milliseconds);
-        }
+        if (!path_to_state_.empty()) { SaveTofile(milliseconds); }
     }
 }
 
@@ -57,6 +58,7 @@ void Application::SaveTofile(size_t milliseconds, bool save) {
         temp.append("temp.txt");
         std::ofstream ios{temp};
         if (!ios) {
+            std::cout << temp << std::endl;
             throw std::runtime_error("can't save server data");
         }
         boost::archive::text_oarchive oa{ios};
@@ -92,6 +94,12 @@ void Application::RestoreFromFile() {
     }
     ios.close();
     path_to_state_.remove_filename();
+}
+
+void Application::CalculateLifetime(game_session::GameSession& game, size_t milliseconds) {
+    for (auto& it : game.CalculateLifetime(std::chrono::milliseconds{milliseconds})) {
+        use_cases_.Save(it);
+    }
 }
 
 void Application::UpdateItemCollisions(DetectData& item_data, 
@@ -205,6 +213,7 @@ Response Application::ChangeDirectory(const Request& req,
     }
     response.body() = EMPTY_BODY;
     response.content_length(response.body().size());
+
     return response;
 }
 
@@ -274,6 +283,32 @@ Response Application::GetPlayers(const Request& req) {
         return FindAllPlayersOnMap(req, *session);
     }
     return CantFindPlayer(req);
+}
+
+Response Application::GetRecords(const Request& req) {
+    if (req.method_string() != Allow::GET) {
+        return MethodNotAllowed(req);
+    }
+    return MakeRecords(req);
+}
+
+Response Application::MakeRecords(const Request& req) {
+    Response response{http::status::ok, req.version()};
+    response.set(http::field::content_type, ContentType::TYPE_JSON);
+    response.set(http::field::cache_control, ContentType::NO_CACHE);
+
+    json::array result;
+    for (auto& it : use_cases_.GetLeaders()) {
+        json::object player;
+        player[NAME] = it.name;
+        player[SCORE] = it.scored_points;
+        player[PLAYTIME] = it.seconds_in_game;
+        result.push_back(player);
+    }
+
+    response.body() = json::serialize(result);
+    response.content_length(response.body().size());
+    return response;
 }
 
 std::optional<game_session::Player> Application::FindPlayerViaToken(

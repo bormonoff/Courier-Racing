@@ -30,6 +30,7 @@ CollectionResult TryCollectPoint(Point2D a, Point2D b, Point2D c) {
 std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider& provider) {
     std::vector<GatheringEvent> result;
     double time {0};
+    if (provider.GatherersCount() == 0 || provider.ItemsCount() == 0) { return result; }
     for (size_t gather = 0; gather <= provider.GatherersCount() - 1; ++gather) {
         for (size_t item = 0; item <= provider.ItemsCount() - 1; ++item) {
             auto collection = TryCollectPoint(provider.GetGatherer(gather).start_pos,

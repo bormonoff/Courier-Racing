@@ -26,11 +26,20 @@ enum Direction {
     DOWN
 };
 
+struct LeaderInfo {
+    std::string name;
+    size_t scored_points;
+    size_t seconds_in_game;
+};
+
+using Leaders = std::vector<game_session::LeaderInfo>;
+
 class Dog {
 public:
     using Items = std::vector<model::Item>;
 
-    explicit Dog(std::string name, size_t id, Coordinate start, double speed);
+    explicit Dog(std::string name, size_t id, Coordinate start, double speed, 
+                 size_t lifetime_ = 0);
 
     Dog() = delete;
     Dog& operator=(const Dog&) = delete;
@@ -48,7 +57,7 @@ public:
     }
 
     double GetDefaultSpeed() const {
-        return default_speed;
+        return default_speed_;
     }
 
     const Speed& GetSpeed() const {
@@ -71,6 +80,15 @@ public:
         return direction_;
     } 
 
+    size_t GetRetriementTime() const {
+        return retriement_time_.count();
+    }
+
+    size_t GetPlayTime() const {
+        return play_time_.count();
+    }
+
+    void SetId(size_t id);
     void SetDirectionViaInt(size_t direction);
     void SetSpeed(std::string&& drection);
     void SetSpeed(Speed& speed);
@@ -81,21 +99,36 @@ public:
     void MoveDog(Coordinate& target);
     void CollectItem(model::Item item);
     void ClearBag(const model::Map& current_map);
+    bool CalculateLive(const std::chrono::milliseconds& interval, bool move);
+    bool IsMoving() const;
     const std::string GetDirection() const;   
     Coordinate TargetPosition(size_t& time);
 
 private:
-    std::string name_;
     size_t id_;
-    const double default_speed;
+    std::string name_;
     
-    Coordinate coordinate_;
-    Speed speed_;
     size_t direction_;
-    Items items_in_bag_;
+    Coordinate coordinate_;
     size_t scored_points_;
+    Items items_in_bag_;
+
+    Speed speed_;
+    const double default_speed_;
+
+    std::chrono::milliseconds play_time_;
+    std::chrono::milliseconds life_time_;
+    const std::chrono::milliseconds retriement_time_;
 };
 
 bool operator==(const Dog& first, const Dog& second);
 
+class DogRepository {
+public:
+    virtual void Save(LeaderInfo& dog) = 0;
+    virtual Leaders GetLeaders() = 0;
+
+protected:
+    ~DogRepository() = default;
+};
 }  // namespace game_session

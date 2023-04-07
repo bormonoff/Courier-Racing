@@ -43,6 +43,8 @@ Response FindAllPlayerStatesOnMap(const Request& req,
 
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
+
+    // std::cout << json_res << "\n";
     return response;
 }
 
@@ -101,11 +103,13 @@ Response FindAllPlayersOnMap(const Request& req,
     for (auto it : session.GetPlayerTokens().GetPlayers()) {
         json::object temp_respond;
         temp_respond[NAME] = (it.second).GetDogName();
-        json_res[std::to_string(count)] = temp_respond;
-        ++count;
+        json_res[std::to_string(it.second.GetDogID())] = temp_respond;
     }
+
     response.body() = json::serialize(json_res);
     response.content_length(response.body().size());
+
+    // std::cout << json_res << "\n";
     return response;
 }
 

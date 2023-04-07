@@ -36,10 +36,11 @@ void CreateGame(boost::json::value& file_json, model::Game& game) {
         double speed = GetDogSpeed(file_json, maps);
         size_t bag_capacity = GetDogBagSize(file_json, maps);
         size_t period = ReadLootGeneratorPeriod(file_json);
+        size_t lifetime = ReadDogLifetime(file_json);
         double probability = ReadLootGeneratorProbability(file_json);
 
         model::Map map_for_add(util::Tagged<std::string, model::Map>(mapID), name, 
-                               speed, period, bag_capacity, probability);
+                               speed, period, bag_capacity, probability, lifetime);
         ReadRoadsIntoMap(maps, map_for_add);    
         ReadOfficesIntoMap(maps, map_for_add);
         ReadBuildingsIntoMap(maps, map_for_add);
@@ -88,6 +89,17 @@ size_t ReadLootGeneratorPeriod(const json::value& file_json) {
         throw std::runtime_error("Can't read spawn items period from config");
     }
     return period;
+}
+
+size_t ReadDogLifetime(const json::value& file_json) {
+    double lifetime;
+    try {
+        lifetime = std::stod(json::serialize(file_json.at("dogRetirementTime")));
+    } catch(std::exception& ex) {
+        throw std::runtime_error("Can't read dog retriement time from config");
+    }
+    // Conversion from seconds to milliseconds
+    return lifetime *= 1000;
 }
 
 double ReadLootGeneratorProbability(const json::value& file_json) {

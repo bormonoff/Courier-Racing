@@ -24,6 +24,14 @@ void LostThings::AddLostThing(size_t key, const Item& value) {
 void LostThings::CreateLostThing(const std::vector<Road> &roads, 
                                       std::chrono::milliseconds delta, 
                                       size_t dogs_count) {
+    if (lost_things_.size() > dogs_count) {
+        for (auto it = lost_things_.begin();it != lost_things_.end();) {
+            it = lost_things_.erase(it);
+            if (lost_things_.size() <= dogs_count) {
+                break;
+            }
+        }
+    }
     size_t items_to_add = generator_.Generate(delta, GetThingsCount(), dogs_count);
     
     for (int i = 0; i < items_to_add; ++i) {

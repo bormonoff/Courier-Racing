@@ -39,6 +39,10 @@ std::vector<std::string> ReadURL(const http::request<http::string_body>& req) {
     return result;
 }
 
+std::string ReadStrURL(const http::request<http::string_body>& req) {
+    return DecodeURL(static_cast<std::string>(req.target()));
+}
+
 std::string DecodeURL(const std::string& target_url) {
     std::string decode_url;
     char decode_symbol;

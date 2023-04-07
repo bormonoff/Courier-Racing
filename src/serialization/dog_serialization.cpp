@@ -2,10 +2,11 @@
 
 namespace serialization {
 
-DogRepr::DogRepr(const game_session::Dog source)
+DogRepr::DogRepr(const game_session::Dog source, size_t Id)
     : name_{source.GetName()},
-        id_{source.GetID()},
-        default_speed_{source.GetDefaultSpeed()}, 
+        id_{Id},
+        default_speed_{source.GetDefaultSpeed()},
+        retriement_time_{source.GetRetriementTime()},
         coordinate_{source.GetStartPoint()},
         speed_{source.GetSpeed()},
         direction_{source.GetDirectionViaInt()},
@@ -15,7 +16,8 @@ DogRepr::DogRepr(const game_session::Dog source)
 
 game_session::Dog DogRepr::Recover() {
     game_session::Dog result{name_, id_, coordinate_,
-                                default_speed_};
+                             default_speed_, 
+                             retriement_time_};
     result.SetSpeed(speed_);
     result.SetDirectionViaInt(direction_);
     for (auto& it : items_in_bag_) {

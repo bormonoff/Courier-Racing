@@ -49,7 +49,6 @@ add_library(GameSessionLib STATIC
 
 target_include_directories(GameSessionLib PUBLIC src)
 
-
 add_executable(game_server 
 	src/main.cpp
 	src/sdk.h
@@ -64,6 +63,9 @@ add_executable(game_server
 	src/serialization/dog_serialization.cpp
 	src/serialization/session_serialization.h
 	src/serialization/session_serialization.cpp
+	src/postgres/connection_pool.h
+	src/postgres/postgres.h
+	src/postgres/postgres.cpp
 	src/handlers/request_handler.cpp
 	src/handlers/request_handler.h
 	src/handlers/api_handler.h
@@ -73,6 +75,8 @@ add_executable(game_server
 	src/handlers/application.cpp
 	src/handlers/api_response_storage.h
 	src/handlers/api_response_storage.cpp
+	src/handlers/db_use_cases.h
+	src/handlers/db_use_cases.cpp
 	src/loggers/boost_log.cpp
 	src/loggers/boost_log.h
 	src/loggers/boost_response.h
@@ -121,7 +125,7 @@ add_executable(test_serialization
 	src/serialization/session_serialization.cpp
 )
 
-target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost GameLib GameSessionLib)
+target_link_libraries(game_server PRIVATE Threads::Threads CONAN_PKG::boost CONAN_PKG::libpqxx GameLib GameSessionLib)
 target_link_libraries(test_loot_generator PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_model PRIVATE CONAN_PKG::catch2 GameLib)
 target_link_libraries(test_collision_detector PRIVATE CONAN_PKG::catch2 GameLib)

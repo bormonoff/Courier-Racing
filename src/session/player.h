@@ -44,6 +44,8 @@ public:
     }
 
     void SetDogSpeed(std::string&& direction);
+    void SetDogId(size_t id);
+    bool CalculateLifetime(const std::chrono::milliseconds& interval);
     
 private:
     Dog& dog_;

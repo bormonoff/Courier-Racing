@@ -5,17 +5,19 @@ namespace model {
 using namespace std::literals;
 
 Map::Map(Id id, std::string name, size_t speed, size_t period, size_t bag_capacity,
-         double probability) noexcept
+         double probability, size_t lifetime) noexcept
     : id_(std::move(id)),
         name_(std::move(name)),
         dog_speed_(speed), 
         bag_capacity_ (bag_capacity),
-        lost_things_{period, probability} {}
+        lost_things_{period, probability},
+        dog_lifetime_{lifetime} {
+}
 
 
 void Map::AddOffice(Office office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
-        throw std::invalid_argument("Duplicate warehouse");
+        throw std::runtime_error("Duplicate warehouse");
     }
 
     const size_t index = offices_.size();
@@ -24,7 +26,7 @@ void Map::AddOffice(Office office) {
         warehouse_id_to_index_.emplace(o.GetId(), index);
     } catch (...) {
         offices_.pop_back();
-        throw std::invalid_argument("Can't emplace office!");
+        throw std::runtime_error("Can't emplace office!");
     }
 }
 

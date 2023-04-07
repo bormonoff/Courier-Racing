@@ -3,15 +3,16 @@
 namespace serialization {
 
 GameSessionRepr::GameSessionRepr(const game_session::GameSession& source)
-    : dogID_{source.GetIdCount()},
-      map_{*source.GetMap().GetId()} {
+    : map_{*source.GetMap().GetId()} {
+    size_t Id{0};
     for (auto& [token, player] : source.GetPlayerTokens().GetPlayers()) {
-        dog_tokens_.emplace(token, DogRepr{player.GetDog()});
+        dog_tokens_.emplace(token, DogRepr{player.GetDog(), Id++});
     }
 
     for (auto& [Id, item] : source.GetMap().GetLostThings()) {
         lost_things_.emplace(Id, item);
     }
+    dogID_ = Id;
 }
 
 void GameSessionRepr::Recover(game_session::GameSession& result) {

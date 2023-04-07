@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <iostream>
+
 #include "model/building.h"
 #include "util/tagged.h"
 

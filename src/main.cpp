@@ -38,12 +38,18 @@ int main(int argc, char* argv[]) {
 
         boost_log::InitBoostLog();
 
-        json_loot::LootTypes loot_types;
         model::Game game;
+        json_loot::LootTypes loot_types;
         json_loader::LoadGame(args.config, game, loot_types);
         
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
+
+        const char* db_url = std::getenv("GAME_DB_URL");
+        if (!db_url) {
+            throw std::runtime_error("DB URL is not specified");
+        }
+        postgres::DataBase data_base{num_threads, db_url};
 
         auto handler = std::make_shared<http_handler::RequestHandler>(ioc, game, 
                                                                       args.root,
@@ -51,7 +57,8 @@ int main(int argc, char* argv[]) {
                                                                       args.milliseconds, 
                                                                       args.random_spawn,
                                                                       args.save_interval,
-                                                                      std::move(loot_types));
+                                                                      std::move(loot_types),
+                                                                      data_base);
         http_handler::RequestLoggerHandler logger_handler{std::move(handler)};
 
         net::signal_set signals(ioc, SIGINT, SIGTERM);

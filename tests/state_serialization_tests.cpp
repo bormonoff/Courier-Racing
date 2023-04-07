@@ -86,7 +86,7 @@ SCENARIO("Serialization") {
         Dog init_dog("name", 0, {0.0, 0.0}, 5.0);
 
         WHEN("dog is serialized") {
-            DogRepr ser_dog{init_dog};
+            DogRepr ser_dog{init_dog, 1};
             oa << ser_dog;
     
             THEN("Dogs before and after seialization are equal") {

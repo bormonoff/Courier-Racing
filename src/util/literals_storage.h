@@ -52,6 +52,8 @@ struct Allow {
     const std::string MAPID = "mapId"s;
     //JSON answers
     const std::string NAME = "name"s;
+    const std::string SCORE = "score"s;
+    const std::string PLAYTIME = "playTime";
     const std::string ID = "id"s;
     const std::string POSITION = "pos"s;
     const std::string TYPE = "type"s;
@@ -62,7 +64,6 @@ struct Allow {
     const std::string PLAYERID = "playerId"s;
     const std::string LOSTOBJECTS = "lostObjects"s;
     const std::string BAG = "bag"s;
-    const std::string SCORE = "score"s;
     //Map literals
     const std::string ROADS = "roads"s;
     const std::string BUILDINGS = "buildings"s;

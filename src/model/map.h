@@ -14,7 +14,7 @@ public:
     using Points = std::vector<size_t>;
 
     explicit Map(Id id, std::string name, size_t speed, size_t period,
-                 size_t bag_capacity, double probability) noexcept;
+                 size_t bag_capacity, double probability, size_t lifetime = 0) noexcept;
 
     Map(const Map&) = default;
     Map& operator=(const Map&) = default;
@@ -50,9 +50,13 @@ public:
     const Offices& GetOffices() const noexcept {
         return offices_;
     }
-
+    
     double GetDogSpeed() const noexcept {
         return dog_speed_;
+    }
+
+    size_t GetLifetime() const noexcept {
+        return dog_lifetime_;
     }
 
     size_t GetMaxBagSize() const noexcept {
@@ -83,6 +87,7 @@ private:
 
     double dog_speed_;
     size_t bag_capacity_;
+    size_t dog_lifetime_;
 
     OfficeIdToIndex warehouse_id_to_index_;
 };

@@ -12,6 +12,8 @@ namespace game_session{
 
 std::string GenerateToken();
 
+using Leaders = std::vector<game_session::LeaderInfo>;
+
 class PlayerTokens{
 public:
     PlayerTokens() = default;
@@ -23,6 +25,7 @@ public:
         return players_;
     }
 
+    Leaders CalculateLifetime(const std::chrono::milliseconds& interval);
     const Player& AddPlayer(Dog& dog);
     void AddPlayer(Player& player);
     const std::optional<Player> FindPlayer(std::string token);

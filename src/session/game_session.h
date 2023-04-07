@@ -6,7 +6,6 @@
 #include "model/game.h"
 #include "session/dog.h"
 #include "session/player_token.h"
-
 #include "util/utils.h"
 
 namespace game_session {
@@ -43,6 +42,7 @@ public:
     void MakeOffset(size_t& time, DetectData& detector);
     void AddItemsToCollisionDetector(DetectData& detector);
     void AddOfficesToCollisionDetector(DetectData& detector);
+    std::vector<LeaderInfo> CalculateLifetime(const std::chrono::milliseconds& interval);
     bool TargetInsideRoad(const model::Road& road, Coordinate& target);  
     Dog& FindDogByIndex(size_t index);
     FindRoadOpt FindRoad(const std::vector<model::Road>& roads, Dog& dog) const;

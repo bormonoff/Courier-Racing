@@ -18,11 +18,10 @@ Args ParseCommandLine(int argc, const char* const argv[]) {
         ("tick-period,t", po::value(&args.milliseconds)->value_name("ms"),
          "set tick period")
         ("state-file,s", po::value(&args.store_data)->value_name("file"),
-        "set path to save")
+         "set path to save")
         ("save-period,p", po::value(&args.save_interval)->value_name("ms"),
-        "set store data period")
-        ("randomize-spawn-points,r",
-         "spawn dogs at random positions");
+         "set store data period")
+        ("randomize-spawn-points,r", "spawn dogs at random positions");
         
 
     po::variables_map vm;

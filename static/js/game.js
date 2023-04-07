@@ -13,6 +13,10 @@ let pos_arr = [];
 
 const objLoader = new THREE.OBJLoader();
 
+function goToRecords() {
+  window.location.replace('/hall_of_fame.html');
+}
+
 function loadLootType(loot, then) {
   if(loot['type'] == 'obj') {
     loot['file'] = objLoader.load(loot['file'], function(obj) {
@@ -154,11 +158,12 @@ class GameState {
     this.posUpdateInterval = 5;
     this.playersUpdateInterval = 50;
     this.keyState = new KeyState();
-    this.currentState = {};
+    this.currentState = {players: {}};
     this.requestInstantUpdate = false;
     this.cameraPos = undefined;
     this.lostObjects = {};
-    this.abandonedLoot = []
+    this.disappearingLoot = {};
+    this.player_elems = {};
 
     this._updateState(function() {
       self.stateLoaded = true;
@@ -245,6 +250,7 @@ class GameState {
     const nextTime = performance.now();
     const delta = performance.now() - this.stateTime;
     const speedMul = 1/1000;
+    this.stateTime = nextTime;
 
     Object.entries(this.desiredState['players']).forEach(([id, playerPos]) => {
       const player = this.currentState.players[id];
@@ -253,7 +259,7 @@ class GameState {
       this._movePlayersLoot(player, delta);
     });
 
-    this.stateTime = nextTime;
+    this._processDisappearingLoot();
   }
 
   _syncPlayers(then) {
@@ -268,6 +274,9 @@ class GameState {
     }).done(function(x){
       self._updatePlayersList(x);
       then();
+    }).fail(function(xhr, status, err) {
+      if (err!='Unauthorized') return;
+      goToRecords();
     })
 
     this.playersSuncInProgress = false;
@@ -304,13 +313,23 @@ class GameState {
     let self = this;
     self.players[id] = {
       object: addActor(this.scene),
-      data: playerData
+      playerData: playerData,
+      data: self.currentState.players[id] !== undefined ? self.currentState.players[id].data : undefined
     };
+    self._addPlayerElem(id, playerData['name']);
   }
 
   _deletePlayer(id) {
     let self = this;
+    this.scene.remove(self.players[id].object.object);
+    if (self.players[id].data !== undefined) {
+      const bag = self.players[id].data.bag;
+      for(var key in bag) {
+        this.scene.remove(bag[key].object);
+      }
+    }
     delete self.players[id];
+    self._delPlayerElem(id);
   }
 
   _movePlayerTo(id, playerPos) {
@@ -460,6 +479,29 @@ class GameState {
     new_pos.speed = vec_mul(dest_dir, 1/dest_t);
   }
 
+  _setPlayerScore(id, score) {
+    if (this.player_elems[id] == undefined) return;
+
+    this.player_elems[id].score.text(score);
+  }
+
+  _addPlayerElem(id, name) {
+    const obj = new Object();
+    this.player_elems[id] = obj;
+    obj.elem = $('<div>');
+    obj.elem.text(name + ': ');
+    obj.score = $('<span>');
+    obj.elem.append(obj.score);
+
+    const tab = $('#score_table');
+    tab.append(obj.elem);
+  }
+
+  _delPlayerElem(id) {
+    this.player_elems[id].elem.remove();
+    delete this.player_elems[id];
+  }
+
   _applyDesiredState() {
     let self = this;
 
@@ -477,6 +519,7 @@ class GameState {
       new_players[id] = playerPos;
 
       const newDir = convDirection(playerPos['dir']);
+      self._setPlayerScore(id, playerPos['score']);
 
       if (old_players[id] !== undefined) {
         self._interpolateRotation(old_players[id], new_players[id]);
@@ -490,8 +533,11 @@ class GameState {
         new_players[id]['base_dir'] = newDir;
         new_players[id]['dir_time'] = performance.now();
         new_players[id].data = {
-          "bag": []
+          "bag": {}
         };
+
+        if (self.players[id]!==undefined)
+          self.players[id].data = new_players[id].data;
       }
     });
 
@@ -513,13 +559,13 @@ class GameState {
     for(var i in player.bag) {
       const elem = player.bag[i];
       const id = elem['id'];
+      if (player.data.bag[id] === undefined)
+        continue;
 
       const mover = player.data.bag[id].mover;
       mover.setTarget([player.pos[0] + 0.5 + baseShiftX*(i), 1.5 + shiftZ, player.pos[1] + 0.5 + baseShiftY*(i)]);
       mover.doMove(delta);
-      //convDirection();
       player.data.bag[id].object.position.set(mover.pos[0],mover.pos[1],mover.pos[2]);
-      //player.data.bag[id].object.position.set(player.pos[0] + 0.5, 1.5, player.pos[1] + 0.5);
     }
   }
 
@@ -527,8 +573,10 @@ class GameState {
     const self = this;
 
     Object.entries(this.currentState['players']).forEach(([id, player]) => {
+      const all_ids = new Set();
       for(var elem of player.bag) {
         var id = elem['id'];
+        all_ids.add(id);
         if (player.data.bag[id] === undefined) {
           if (abandonedLoot[id] !== undefined) {
             player.data.bag[id] = abandonedLoot[id];
@@ -542,7 +590,50 @@ class GameState {
           player.data.bag[id].mover = new MovingObject(0.01, [pos.x, pos.y, pos.z]);
         }
       }
+
+      const ids_to_delete = [];
+      for (var id in player.data.bag) {
+        if (!all_ids.has(parseInt(id))) {
+          ids_to_delete.push(id);
+        }
+      }
+      for (var id of ids_to_delete) {
+        self._dropLoot(id, player.data.bag[id]);
+        delete player.data.bag[id];
+      }
     });
+
+    for(var id in abandonedLoot) {
+      self._dropLoot(id, abandonedLoot[id]);
+    }
+  }
+
+  _dropLoot(id, lootObj) {
+    lootObj.disappearingTime = this.stateTime;
+    lootObj.prevTime = lootObj.disappearingTime;
+    this.disappearingLoot[id] = lootObj;
+  }
+
+  _processDisappearingLoot() {
+    const max_time = 1000;
+    const ids_to_delete = [];
+    for(var id in this.disappearingLoot) {
+      const obj = this.disappearingLoot[id];
+      const time_total = this.stateTime - obj.disappearingTime;
+      if(time_total >= max_time) {
+        ids_to_delete.push(id);
+        continue;
+      }
+      const time_prev = obj.prevTime - obj.disappearingTime;
+      obj.object.position.y += (time_total * time_total - time_prev * time_prev)/200000;
+      obj.prevTime = this.stateTime;
+    }
+
+    for(var id of ids_to_delete) {
+      const obj = this.disappearingLoot[id];
+      this.scene.remove(obj.object);
+      delete this.disappearingLoot[id];
+    }
   }
 }
 
@@ -605,6 +696,31 @@ function makeBuildings(scene) {
     const mesh = new THREE.Mesh(geo, materials);
     mesh.position.set(x+w/2., buildingH/2., y+h/2.);
     scene.add(mesh);
+  }
+}
+
+function makeOffices(scene) {
+  const buildingH = 3;
+  const material = new THREE.MeshPhongMaterial({color: '#afa'});
+  const cone_material = new THREE.MeshPhongMaterial({color: '#faa'});
+
+  for(const b of map['offices']) {
+    const x = b['x'] + b['offsetX'];
+    const y = b['y'] + b['offsetY'];
+    const w = 1;
+    const h = 1;
+    const z = 3;
+    const geo = new THREE.BoxBufferGeometry(w, z , h);
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.position.set(x+w/2., z/2., y+h/2.);
+    scene.add(mesh);
+
+    const geometry = new THREE.ConeGeometry( .2, 1, 32 );
+    //const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    const cone = new THREE.Mesh( geometry, cone_material );
+    cone.position.set(x+w/2., z/2. + 2, y+h/2.);
+    cone.rotation.set(0, 0, Math.PI);
+    scene.add( cone );
   }
 }
 
@@ -766,7 +882,7 @@ function gameserverMain() {
     const basementMat = new THREE.MeshPhongMaterial({color: '#8AC'});
     const mesh = new THREE.Mesh(basementGeo, basementMat);
     mesh.receiveShadow = true;
-    mesh.position.set(w/2., basementH/2., h/2.);
+    mesh.position.set(xmin + w/2., basementH/2., ymin + h/2.);
     scene.add(mesh);
   }
 
@@ -781,6 +897,7 @@ function gameserverMain() {
 
   makeRoads(scene);
   makeBuildings(scene);
+  makeOffices(scene);
 
   {
     const color = 0xFFFFFF;

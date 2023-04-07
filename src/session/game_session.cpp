@@ -6,8 +6,8 @@ namespace game_session{
 
 GameSession::GameSession(const model::Map& map)
     : session_map_{map}, 
-      dogID_{0} {}
-
+      dogID_{0} {
+}
 
 const Player& GameSession::AddDog(std::string name, bool randomize) {
     if (randomize) {
@@ -23,16 +23,22 @@ const Player& GameSession::AddDog(std::string name, bool randomize) {
             x = road.GetStart().x;
             size_t begin = road.GetStart().y;
             size_t end = road.GetEnd().y;
+            if (begin > end) {
+                std::swap(begin, end);
+            }
             y = util::GetRandomNumber(begin, end - 1) + 0.1 * util::GetRandomNumber(0, 9);
             dogs_.push_back(Dog{std::move(name), dogID_++, Coordinate{x,y}, 
-                            session_map_.GetDogSpeed()});
+                            session_map_.GetDogSpeed(), session_map_.GetLifetime()});
         } else {
             y = road.GetStart().y;
             size_t begin = road.GetStart().x;
             size_t end = road.GetEnd().x;
+            if (begin > end) {
+                std::swap(begin, end);
+            }
             x = util::GetRandomNumber(begin, end - 1) + 0.1 * util::GetRandomNumber(0, 9);
             dogs_.push_back(Dog{std::move(name), dogID_++, Coordinate{x,y}, 
-                            session_map_.GetDogSpeed()});
+                            session_map_.GetDogSpeed(), session_map_.GetLifetime()});
         }
         return players_.AddPlayer(dogs_.back());
     } else {
@@ -42,12 +48,12 @@ const Player& GameSession::AddDog(std::string name, bool randomize) {
             x = road.GetStart().x;
             y = road.GetStart().y;
             dogs_.push_back(Dog{std::move(name), dogID_++, Coordinate{x,y}, 
-                            session_map_.GetDogSpeed()});
+                            session_map_.GetDogSpeed(), session_map_.GetLifetime()});
         } else {
             y = road.GetStart().y;
             x = road.GetStart().x;              
             dogs_.push_back(Dog{std::move(name), dogID_++, Coordinate{x,y}, 
-                            session_map_.GetDogSpeed()});
+                            session_map_.GetDogSpeed(), session_map_.GetLifetime()});
         }
         return players_.AddPlayer(dogs_.back());
     }
@@ -101,6 +107,10 @@ FindRoadOpt GameSession::FindRoad(const std::vector<model::Road>& roads,
     return result;
 }
 
+std::vector<LeaderInfo> GameSession::CalculateLifetime(const std::chrono::milliseconds& interval) {
+    return players_.CalculateLifetime(interval);
+}
+
 void GameSession::MakeOffset(size_t& time, DetectData& detector) {
     for (auto& it : dogs_) {      
         FindRoadOpt CurrentRoad = FindRoad(session_map_.GetRoadMap(), it);
@@ -150,7 +160,7 @@ void GameSession::AddOfficesToCollisionDetector(DetectData& detector) {
         // Item width is 0.25.
         detector.AddItem({static_cast<double>(item.GetPosition().x), 
                             static_cast<double>(item.GetPosition().y)}, 
-                            0.25, office_index++);
+                            0.75, office_index++);
     }
 }
 
@@ -168,7 +178,7 @@ void GameSession::RemoveItemViaIndex(size_t index) {
 }
 
 void GameSession::GenerateThingsOnMap(size_t time) { 
-    session_map_.GenerateThings(time, dogs_.size());
+    session_map_.GenerateThings(time, players_.GetPlayers().size());
 }
 
 void GameSession::SetIdCount(size_t Id) {

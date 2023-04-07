@@ -24,7 +24,7 @@ namespace serialization {
     
 class DogRepr {
 public:
-    explicit DogRepr(const game_session::Dog source);
+    explicit DogRepr(const game_session::Dog source, size_t Id);
 
     DogRepr() = default;
     DogRepr& operator=(const DogRepr&) = default;
@@ -39,6 +39,7 @@ public:
         ar& direction_;
         ar& items_in_bag_;
         ar& scored_points_;
+        ar& retriement_time_;
     }
 
     game_session::Dog Recover();
@@ -46,6 +47,7 @@ public:
 private:
     std::string name_;
     size_t id_;
+    size_t retriement_time_;
     double default_speed_;
     
     game_session::Coordinate coordinate_;

@@ -20,6 +20,7 @@ void ReadBuildingsIntoMap(const json::value& maps, model::Map& map_for_add);
 void ReadOfficesIntoMap(const json::value& maps, model::Map& map_for_add);
 void ReadItemsCostIntoMap(const json::value& maps, model::Map& map_for_add);
 void ReadItemsCount(const json::value& maps, model::Map& map_for_add); 
+size_t ReadDogLifetime(const json::value& file_json);
 std::string ReadMapID(const json::value& map);
 std::string ReadMapName(const json::value& map);
 double ReadLootGeneratorProbability(const json::value& file_json);

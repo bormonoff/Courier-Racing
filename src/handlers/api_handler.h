@@ -13,19 +13,18 @@ public:
     explicit ApiHandler(model::Game& game, Strand& strand, size_t period, 
                         bool random_spawn, size_t save_interval, 
                         json_loot::LootTypes&& loot_types, 
-                        const std::filesystem::path& path_to_state)
-        : scenarios_{game, strand, period, random_spawn, save_interval, 
-                     std::move(loot_types), path_to_state} {
-    }
+                        const std::filesystem::path& path_to_state, 
+                        postgres::DataBase& data_base);
 
     ApiHandler(const ApiHandler&) = delete;
     ApiHandler& operator=(const ApiHandler&) = delete;
     
     Response MakeResponse(const Request& req,
-                          const std::vector<std::string>& URL_path);
+                          const std::string& URL_path);
     void SaveState();
 
 private:
     Application scenarios_;
+    std::map<std::string, std::function<Response(Request)>> handlers_;
 };
 }  //namespace http_handler
