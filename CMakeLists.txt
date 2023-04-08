@@ -64,6 +64,7 @@ add_executable(game_server
 	src/serialization/session_serialization.h
 	src/serialization/session_serialization.cpp
 	src/postgres/connection_pool.h
+	src/postgres/connection_pool.cpp
 	src/postgres/postgres.h
 	src/postgres/postgres.cpp
 	src/handlers/request_handler.cpp

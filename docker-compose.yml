@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  game_server:
+    build: .
+    environment:
+      GAME_DB_URL: "postgres://bormon:passwd@postgres:5432/dogs"
+    volumes:
+      - ./docker/save:/var
+    ports:
+      - "8080:8080"
+    depends_on: 
+      - postgres
+
+
+  postgres:
+    image: postgres:15.2
+    environment:
+      POSTGRES_DB: "bormon_db"
+      POSTGRES_USER: "bormon"
+      POSTGRES_PASSWORD: "passwd"
+      PGDATA: "/var/lib/postgresql/data"
+    volumes:
+      - ./docker/postgres:/var/lib/postgresql/data
+      - ./docker/scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
