@@ -7,6 +7,8 @@
 
 namespace model {
 
+const double DOGWIDTH = 0.4;
+
 struct Item {
     double x;
     double y;

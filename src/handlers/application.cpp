@@ -54,22 +54,21 @@ void Application::UpdateState(size_t milliseconds) {
 void Application::SaveTofile(size_t milliseconds, bool save) {
     interval_since_save_ += std::chrono::milliseconds(milliseconds);
     if (save_interval_.count() <= interval_since_save_.count() || save == true) {
-        std::filesystem::path temp = path_to_state_;
-        temp.append("temp.txt");
-        std::ofstream ios{temp};
+        std::filesystem::path temp_path = path_to_state_;
+        temp_path.append("temp.txt");
+        std::ofstream ios{temp_path};
         if (!ios) {
-            std::cout << temp << std::endl;
             throw std::runtime_error("can't save server data");
         }
         boost::archive::text_oarchive oa{ios};
         serialization::GameSessionStorage storage{};
         for (auto& session : sessions_) {
-            serialization::GameSessionRepr temp{session.second};
-            storage.AddSession(temp);
+            serialization::GameSessionRepr temp_session{session.second};
+            storage.AddSession(temp_session);
         }
         oa << storage;
         ios.close();
-        std::filesystem::rename(temp, path_to_state_.append("save.txt"));
+        std::filesystem::rename(temp_path, path_to_state_.append("save.txt"));
         path_to_state_.remove_filename();
     }
 }
