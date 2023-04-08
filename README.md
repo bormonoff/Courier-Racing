@@ -40,6 +40,20 @@ via the followed instruction.
  </td>
  </tr>
  </table>
+ 
+ ## Performance tests
+<table>
+<tr>
+<td>
+
+`Manual test:`
+- Server was successfully tested via ten people playing at the same time on one map.
+
+`Synthetic test:`
+- Useful server load on a VM with Ice Lake (2 kernels, 2 GM RAM) was 5000 requests per second - 93% were with 200 code.
+ </td>
+ </tr>
+ </table>
 
 ### Instruments used in this game 
 `Frontend is written using JavaScript. Backend using C++.` In the project the following libraries were used:
